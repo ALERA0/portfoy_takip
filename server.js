@@ -8,7 +8,6 @@ dotenv.config();
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 
-
 const connect = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -18,19 +17,19 @@ const connect = async () => {
   }
 };
 
-
 const userRouter = require("./routes/userRoute.js");
 const authRouter = require("./routes/authRoute.js");
+const stockRouter = require("./routes/stockRoute.js");
+const currencyRouter = require("./routes/currencyRoute.js");
+const goldRouter = require("./routes/goldRoute.js");
 
-
-app.use(cookieParser())
+app.use(cookieParser());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(cors());
 
-
-app.use("/api",userRouter)
-app.use("/auth",authRouter)
+app.use("/api", userRouter, stockRouter, currencyRouter, goldRouter);
+app.use("/auth", authRouter);
 
 app.listen(port, () => {
   connect();
