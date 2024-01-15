@@ -9,6 +9,9 @@ const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 // const redisClient = require('./shared/redis.js')();
 
+
+app.set('trust proxy', 1);
+
 const connect = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
