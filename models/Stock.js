@@ -6,13 +6,14 @@ const stockSchema = new mongoose.Schema({
   },
   name: {
     type: String,
+    index: true,
   },
   changePercent: {
     type: String,
   },
   addedDate: {
     type: Date,
-    default: Date.now, 
+    default: Date.now,
   },
 });
 
