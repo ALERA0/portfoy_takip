@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const saveStockDataToDb = require("../scrapeSave/saveStockDataToDb");
 const Stock = require("../models/Stock");
-const redisClient = require("../shared/redis.js")()
+// const redisClient = require("../shared/redis.js")()
 
 router.get("/add-stocks", async (req, res) => {
   try {
