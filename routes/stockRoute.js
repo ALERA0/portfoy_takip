@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const saveStockDataToDb = require("../scrapeSave/saveStockDataToDb");
 const Stock = require("../models/Stock");
-const redisClient = require("../shared/redis.js")()
+const redisClient = require("../shared/redis.js")();
 
 router.get("/add-stocks", async (req, res) => {
   try {
@@ -17,7 +17,7 @@ router.get("/add-stocks", async (req, res) => {
 router.get("/getAllStock", async (req, res) => {
   try {
     // Redis'ten veriyi kontrol et
-    const cachedStocks = await redisClient.get('allStocks');
+    const cachedStocks = await redisClient.get("allStocks");
 
     if (cachedStocks) {
       // Redis'teki veriyi döndür
@@ -28,15 +28,17 @@ router.get("/getAllStock", async (req, res) => {
       });
     }
 
-    // // Redis'te veri yoksa, veritabanından çek
-    const data = await Stock.find();
+    // Bugün eklenen hisseleri getir
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0); // Bugünün başlangıcı
+    const data = await Stock.find({ addedDate: { $gte: today } });
 
-    // // Veriyi Redis'e kaydet
-    await redisClient.set('allStocks', JSON.stringify(data), 'EX', 60 * 60); // 1 saat TTL
+    // Veriyi Redis'e kaydet
+    await redisClient.set("allStocks", JSON.stringify(data), "EX", 60 * 60); // 1 saat TTL
 
     res.status(200).json({
       status: "success",
-      message: "Hisseler veritabanından başarıyla getirildi",
+      message: "Bugün eklenen hisseler başarıyla getirildi",
       data,
     });
   } catch (error) {
@@ -44,10 +46,13 @@ router.get("/getAllStock", async (req, res) => {
   }
 });
 
-router.get("/getStockDetail/:_id", async (req, res) => {
+
+router.get("/getStockDetail/:name", async (req, res) => {
   try {
-    const { _id } = req.params;
-    const data = await Stock.findById(_id);
+    const { name } = req.params;
+
+    const data = await Stock.find({ name: new RegExp(name, "i") });
+
     res.status(200).json({
       status: "success",
       message: "Hisse detayı başarıyla getirildi",
@@ -57,4 +62,5 @@ router.get("/getStockDetail/:_id", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 module.exports = router;

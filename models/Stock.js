@@ -17,4 +17,10 @@ const stockSchema = new mongoose.Schema({
   },
 });
 
+
+stockSchema.pre('save', function (next) {
+  this.name = this.name.toUpperCase(); 
+  next();
+});
+
 module.exports = mongoose.model("Stock", stockSchema);
