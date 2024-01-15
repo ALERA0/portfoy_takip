@@ -9,17 +9,22 @@ const scrapeCurrencyData = async () => {
     const currencyData = [];
 
     $("tbody tr").each((index, element) => {
-      const name = $(element).find("td:first-child div.currency-details div").first().text().trim();
-      const desc = $(element).find("td:first-child div.currency-details .cname").text().trim();
-      const lastPrice = $(element).find("td").eq(1).text().trim();
-      const changePercent = $(element).find("td").eq(5).text().trim();
+      const currencyDetails = $(element).find("td:first-child div.currency-details");
+      const isCryptocurrencyRow = $(element).find("a.item[data-ga-event-param1-value='market_summary_items']").length > 0;
 
-      currencyData.push({
-        name,
-        desc,
-        lastPrice,
-        changePercent,
-      });
+      if (currencyDetails.length > 0 && !isCryptocurrencyRow) {
+        const name = currencyDetails.find("div").first().text().trim();
+        const desc = currencyDetails.find(".cname").text().trim();
+        const lastPrice = $(element).find("td").eq(1).text().trim();
+        const changePercent = $(element).find("td").eq(5).text().trim();
+
+        currencyData.push({
+          name,
+          desc,
+          lastPrice,
+          changePercent,
+        });
+      }
     });
 
     return currencyData;

@@ -9,12 +9,14 @@ const scrapeGoldData = async () => {
     const goldData = [];
 
     $(".tBody ul").each((index, element) => {
-      const name = $(element).find("li.cell010 h3 a").text().trim();
+      const name = $(element).find("li.cell010 h3 a").text().trim() ||$(element).find("li.cell010 b").text().trim() ;
       const price = $(element).find("li.cell009").first().text().trim();
+      const changePercent = $(element).find("li.cell009").eq(2).text().trim();
 
       goldData.push({
         name,
         price,
+        changePercent
       });
     });
 

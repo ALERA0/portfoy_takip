@@ -6,6 +6,7 @@ const currencySchema = new mongoose.Schema({
   },
   name: {
     type: String,
+    index: true,
   },
   desc: {
     type: String,
@@ -17,6 +18,12 @@ const currencySchema = new mongoose.Schema({
     type: Date,
     default: Date.now, 
   },
+});
+
+
+currencySchema.pre('save', function (next) {
+  this.name = this.name.toUpperCase(); 
+  next();
 });
 
 module.exports = mongoose.model("Currency", currencySchema);

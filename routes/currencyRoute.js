@@ -2,6 +2,7 @@ const express = require('express');
 const saveCurrencyDataToDb = require('../scrapeSave/saveCurrencyDataToDb');
 const Currency = require('../models/Currency');
 const router = express.Router();
+const redisClient = require("../shared/redis.js")();
 
 
 router.get('/add-currencies', async (req, res) => {
@@ -16,10 +17,28 @@ router.get('/add-currencies', async (req, res) => {
 
 router.get("/getAllCurrency", async (req, res) => {
   try {
-    const data = await Currency.find();
+    const cachedStocks = await redisClient.get("currencies");
+
+    if (cachedStocks) {
+      // Redis'teki veriyi döndür
+      return res.status(200).json({
+        status: "success",
+        message: "Döviz Redis'ten başarıyla getirildi",
+        data: JSON.parse(cachedStocks),
+      });
+    }
+
+    // Bugün eklenen hisseleri getir
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0); // Bugünün başlangıcı
+    const data = await Currency.find({ addedDate: { $gte: today } });
+
+    // Veriyi Redis'e kaydet
+    await redisClient.set("currencies", JSON.stringify(data), "EX", 60 * 60); // 1 saat TTL
+
     res.status(200).json({
       status: "success",
-      message: "Döviz verileri başarıyla getirildi",
+      message: "Bugün eklenen doviz verileri başarıyla getirildi",
       data,
     });
   } catch (error) {
@@ -27,10 +46,12 @@ router.get("/getAllCurrency", async (req, res) => {
   }
 });
 
-router.get("/getCurrencyDetail/:_id", async (req, res) => {
+router.get("/getCurrencyDetail/:name", async (req, res) => {
   try {
-    const { _id } = req.params;
-    const data = await Currency.findById(_id);
+    const { name } = req.params;
+
+    const data = await Currency.find({ name: new RegExp(name, "i") });
+
     res.status(200).json({
       status: "success",
       message: "Döviz detayı başarıyla getirildi",

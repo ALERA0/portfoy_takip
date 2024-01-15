@@ -2,7 +2,7 @@ const express = require('express');
 const saveGoldDataToDb = require('../scrapeSave/saveGoldDataToDb');
 const Gold = require('../models/Gold');
 const router = express.Router();
-
+const redisClient = require("../shared/redis.js")();
 
 router.get('/add-gold', async (req, res) => {
   try {
@@ -16,10 +16,28 @@ router.get('/add-gold', async (req, res) => {
 
 router.get("/getAllGold", async (req, res) => {
   try {
-    const data = await Gold.find();
+    const cachedStocks = await redisClient.get("golds");
+
+    if (cachedStocks) {
+      // Redis'teki veriyi döndür
+      return res.status(200).json({
+        status: "success",
+        message: "Altınlar Redis'ten başarıyla getirildi",
+        data: JSON.parse(cachedStocks),
+      });
+    }
+
+    // Bugün eklenen hisseleri getir
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0); // Bugünün başlangıcı
+    const data = await Gold.find({ addedDate: { $gte: today } });
+
+    // Veriyi Redis'e kaydet
+    await redisClient.set("golds", JSON.stringify(data), "EX", 60 * 60); // 1 saat TTL
+
     res.status(200).json({
       status: "success",
-      message: "Altın verileri başarıyla getirildi",
+      message: "Bugün eklenen altin verileri başarıyla getirildi",
       data,
     });
   } catch (error) {
@@ -27,13 +45,15 @@ router.get("/getAllGold", async (req, res) => {
   }
 });
 
-router.get("/getGoldDetail/:_id", async (req, res) => {
+router.get("/getGoldDetail/:name", async (req, res) => {
   try {
-    const { _id } = req.params;
-    const data = await Gold.findById(_id);
+    const { name } = req.params;
+
+    const data = await Gold.find({ name: new RegExp(name, "i") });
+
     res.status(200).json({
       status: "success",
-      message: "Altın detayı başarıyla getirildi",
+      message: "Gold detayı başarıyla getirildi",
       data,
     });
   } catch (error) {
