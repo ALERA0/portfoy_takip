@@ -4,14 +4,18 @@ const currencySchema = new mongoose.Schema({
   lastPrice: {
     type: String,
   },
-  currencyName: {
+  name: {
     type: String,
   },
-  currencyDesc: {
+  desc: {
     type: String,
   },
   changePercent: {
     type: String,
+  },
+  addedDate: {
+    type: Date,
+    default: Date.now, 
   },
 });
 

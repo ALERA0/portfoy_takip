@@ -7,6 +7,7 @@ const port = process.env.PORT || 5001;
 dotenv.config();
 const logger = require("morgan");
 const cookieParser = require("cookie-parser");
+// const redisClient = require('./shared/redis.js')();
 
 const connect = async () => {
   try {
@@ -30,6 +31,8 @@ app.use(cors());
 
 app.use("/api", userRouter, stockRouter, currencyRouter, goldRouter);
 app.use("/auth", authRouter);
+
+
 
 app.listen(port, () => {
   connect();

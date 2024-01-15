@@ -4,11 +4,15 @@ const stockSchema = new mongoose.Schema({
   lastPrice: {
     type: String,
   },
-  stockName: {
+  name: {
     type: String,
   },
   changePercent: {
     type: String,
+  },
+  addedDate: {
+    type: Date,
+    default: Date.now, 
   },
 });
 

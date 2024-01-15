@@ -9,14 +9,14 @@ const scrapeCurrencyData = async () => {
     const currencyData = [];
 
     $("tbody tr").each((index, element) => {
-      const currencyName = $(element).find("td:first-child div.currency-details div").first().text().trim();
-      const currencyDesc = $(element).find("td:first-child div.currency-details .cname").text().trim();
+      const name = $(element).find("td:first-child div.currency-details div").first().text().trim();
+      const desc = $(element).find("td:first-child div.currency-details .cname").text().trim();
       const lastPrice = $(element).find("td").eq(1).text().trim();
       const changePercent = $(element).find("td").eq(5).text().trim();
 
       currencyData.push({
-        currencyName,
-        currencyDesc,
+        name,
+        desc,
         lastPrice,
         changePercent,
       });

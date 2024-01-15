@@ -9,12 +9,12 @@ const scrapeStockData = async () => {
     const stockData = [];
 
     $("table.table-data tbody tr").each((index, element) => {
-      const stockName = $(element).find("td:first-child strong").text().trim();
+      const name = $(element).find("td:first-child strong").text().trim();
       const lastPrice = $(element).find("td").eq(2).text().trim();
       const changePercent = $(element).find("td").eq(3).text().trim();
 
       stockData.push({
-        stockName,
+        name,
         lastPrice,
         changePercent,
       });
