@@ -1,9 +1,12 @@
 const mongoose = require("mongoose");
 
+const allowedTypes = ["Stock", "Gold", "Currency"];
+
 const portfolioDetailSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
+    enum: allowedTypes,
   },
   name: {
     type: String,
