@@ -68,4 +68,27 @@ router.get("/getStockDetail/:name", async (req, res) => {
   }
 });
 
+router.get("/getLastStockDetail/:name", async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const latestStockDetail = await Stock.findOne({ name: new RegExp(name, "i") })
+      .sort({ addedDate: -1 })
+      .limit(1);
+
+    if (!latestStockDetail) {
+      return res.status(404).json({ status: "error", message: "Hisse detayı bulunamadı." });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Hisse detayı başarıyla getirildi",
+      data: latestStockDetail,
+    });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+
 module.exports = router;

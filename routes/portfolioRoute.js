@@ -73,7 +73,7 @@ router.post("/createPortfolio", async (req, res) => {
   }
 });
 
-router.post("/addPortfolioDetail/:portfolioId", async (req, res) => {
+router.post("/addAsset/:portfolioId", async (req, res) => {
   try {
     const { type, name, quantity, unitPrice, purchaseDate } = req.body;
     const portfolioId = req.params.portfolioId;

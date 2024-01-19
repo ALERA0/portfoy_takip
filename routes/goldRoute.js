@@ -68,5 +68,27 @@ router.get("/getGoldDetail/:name", async (req, res) => {
   }
 });
 
+router.get("/getLastGoldDetail/:name", async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const latestGoldDetail = await Gold.findOne({ name: new RegExp(name, "i") })
+      .sort({ addedDate: -1 })
+      .limit(1);
+
+    if (!latestGoldDetail) {
+      return res.status(404).json({ status: "error", message: "Altın / Gümüş bulunamadı." });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Altın / Gümüş detayı başarıyla getirildi",
+      data: latestGoldDetail,
+    });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
 
 module.exports = router;

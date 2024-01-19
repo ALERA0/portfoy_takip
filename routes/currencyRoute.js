@@ -65,4 +65,27 @@ router.get("/getCurrencyDetail/:name", async (req, res) => {
   }
 });
 
+
+router.get("/getLastCurrencyDetail/:name", async (req, res) => {
+  try {
+    const { name } = req.params;
+
+    const latestCurrencyDetail = await Currency.findOne({ name: new RegExp(name, "i") })
+      .sort({ addedDate: -1 })
+      .limit(1);
+
+    if (!latestCurrencyDetail) {
+      return res.status(404).json({ status: "error", message: "Döviz detayı bulunamadı." });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Döviz detayı başarıyla getirildi",
+      data: latestCurrencyDetail,
+    });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
 module.exports = router;
