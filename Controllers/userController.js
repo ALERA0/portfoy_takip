@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
+const Portfolio = require("../models/Portfolio");
 
 
 
@@ -53,11 +54,21 @@ const createNewUser = asyncHandler(async (req, res) => {
   // Create and store new user
   const user = await User.create(userObject);
 
+  
+
   if (user) {
-    //created
-    res
-      .status(201)
-      .json({ status: "success", message: `New user ${username} created` });
+    const defaultPortfolio = {
+      name: "Portföy_1",
+      createdBy:user._id,
+      portfolioDetails: [], // Boş bir portföy
+    };
+
+    await Portfolio.create(defaultPortfolio);
+
+    res.status(201).json({
+      status: "success",
+      message: `New user ${username} created with a default portfolio`,
+    });
   } else {
     res
       .status(400)

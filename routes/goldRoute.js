@@ -1,8 +1,13 @@
 const express = require('express');
 const saveGoldDataToDb = require('../scrapeSave/saveGoldDataToDb');
 const Gold = require('../models/Gold');
+const verifyJWT = require('../middleware/verifyJWT.js');
 const router = express.Router();
 const redisClient = require("../shared/redis.js")();
+
+
+router.use(verifyJWT);
+
 
 router.get('/add-gold', async (req, res) => {
   try {
@@ -47,7 +52,9 @@ router.get("/getAllGold", async (req, res) => {
 
 router.get("/getGoldDetail/:name", async (req, res) => {
   try {
-    const { name } = req.params;
+    let { name } = req.params;
+
+    name = encodeURIComponent(name);
 
     const data = await Gold.find({ name: new RegExp(name, "i") });
 

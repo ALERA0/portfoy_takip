@@ -1,8 +1,11 @@
 const express = require('express');
 const saveCurrencyDataToDb = require('../scrapeSave/saveCurrencyDataToDb');
 const Currency = require('../models/Currency');
+const verifyJWT = require('../middleware/verifyJWT.js');
 const router = express.Router();
 const redisClient = require("../shared/redis.js")();
+
+router.use(verifyJWT);
 
 
 router.get('/add-currencies', async (req, res) => {

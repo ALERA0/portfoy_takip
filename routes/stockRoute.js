@@ -2,7 +2,12 @@ const express = require("express");
 const router = express.Router();
 const saveStockDataToDb = require("../scrapeSave/saveStockDataToDb");
 const Stock = require("../models/Stock");
+const verifyJWT = require("../middleware/verifyJWT.js");
 const redisClient = require("../shared/redis.js")();
+
+
+router.use(verifyJWT);
+
 
 router.get("/add-stocks", async (req, res) => {
   try {
