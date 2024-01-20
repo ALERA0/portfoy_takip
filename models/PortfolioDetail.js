@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const allowedTypes = ["Stock", "Gold", "Currency"];
+const allowedTypes = ["Stock", "Gold", "Currency", "TurkishLira", "Crypto", "Fund"];
 
 const portfolioDetailSchema = new mongoose.Schema({
   type: {
@@ -26,10 +26,9 @@ const portfolioDetailSchema = new mongoose.Schema({
   },
 });
 
-portfolioDetailSchema.pre('save', function (next) {
-    this.name = this.name.toUpperCase(); 
-    next();
-  });
-
+portfolioDetailSchema.pre("save", function (next) {
+  this.name = this.name.toUpperCase();
+  next();
+});
 
 module.exports = mongoose.model("PortfolioDetail", portfolioDetailSchema);

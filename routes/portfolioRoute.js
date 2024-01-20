@@ -6,12 +6,20 @@ const router = express.Router();
 
 router.use(verifyJWT);
 
-
-
+const allowedTypes = [
+  "Stock",
+  "Gold",
+  "Currency",
+  "TurkishLira",
+  "Crypto",
+  "Fund",
+];
 
 router.get("/getAllPortfolio", async (req, res) => {
   try {
-    const portfolios = await Portfolio.find({ createdBy: req.user._id }).select("-portfolioDetails");
+    const portfolios = await Portfolio.find({ createdBy: req.user._id }).select(
+      "-portfolioDetails"
+    );
     res.status(200).json({
       status: "success",
       message: "Portfolio listesi başarıyla getirildi",
@@ -24,24 +32,70 @@ router.get("/getAllPortfolio", async (req, res) => {
   }
 });
 
+router.put("/updatePortfolio/:portfolioId", async (req, res) => {
+  try {
+    const { portfolioId } = req.params;
+    const { name } = req.body;
+
+    const portfolio = await Portfolio.findByIdAndUpdate(
+      portfolioId,
+      { name },
+      { new: true }
+    );
+
+    if (!portfolio) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "Portfolio bulunamadı." });
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "Portfolio başarıyla güncellendi",
+      portfolio,
+    });
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
+router.delete("/deletePortfolio/:portfolioId", async (req, res) => {
+  try {
+    const { portfolioId } = req.params;
+    await Portfolio.findByIdAndDelete(portfolioId);
+    res.status(200).json({
+      status: "success",
+      message: "Portfolio başarıyla silindi",
+    });
+  } catch (error) {
+    res.status(500).send(err);
+  }
+});
+
 router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
   try {
     const { portfolioId } = req.params;
     const portfolio = await Portfolio.findById(portfolioId);
 
     if (!portfolio) {
-      return res.status(404).json({ status: "error", message: "Portfolio not found." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Portfolio not found." });
     }
 
     // Toplam portföy değerini hesapla ve virgülden sonra iki basamaklı olarak düzenle
-    const totalValue = parseFloat(portfolio.portfolioDetails.reduce((total, asset) => {
-      return total + asset.quantity * asset.unitPrice;
-    }, 0).toFixed(2));
+    const totalValue = parseFloat(
+      portfolio.portfolioDetails
+        .reduce((total, asset) => {
+          return total + asset.quantity * asset.unitPrice;
+        }, 0)
+        .toFixed(2)
+    );
 
     // Her varlık türünün yüzdelik dağılımını hesapla
     const distribution = {};
 
-    portfolio.portfolioDetails.forEach(asset => {
+    portfolio.portfolioDetails.forEach((asset) => {
       const assetValue = asset.quantity * asset.unitPrice;
       const percentage = (assetValue / totalValue) * 100;
 
@@ -53,20 +107,37 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     });
 
     // Dağılımı tek bir nesne olarak düzenle ve yüzde toplamlarını kontrol et
-    const formattedDistribution = Object.entries(distribution).map(([type, percentage]) => ({
-      type,
-      percentage: parseFloat(percentage.toFixed(2)),
-    }));
+    const formattedDistribution = Object.entries(distribution).map(
+      ([type, percentage]) => ({
+        type,
+        percentage: parseFloat(percentage.toFixed(2)),
+      })
+    );
+
+    // Tüm varlık türlerini kontrol et ve eksik olanları 0 yüzde ile ekle
+    allowedTypes.forEach((type) => {
+      if (!distribution[type]) {
+        formattedDistribution.push({
+          type,
+          percentage: 0,
+        });
+      }
+    });
 
     // Yüzde toplamlarını düzelt
-    const totalPercentage = formattedDistribution.reduce((total, item) => total + item.percentage, 0);
-    
+    const totalPercentage = formattedDistribution.reduce(
+      (total, item) => total + item.percentage,
+      0
+    );
+
     // Yüzde toplamlarının hassasiyet kontrolü
     if (Math.abs(totalPercentage - 100) > 0.01) {
-      return res.status(500).json({ status: "error", message: "Percentage calculation error." });
+      return res
+        .status(500)
+        .json({ status: "error", message: "Percentage calculation error." });
     }
 
-    const adjustedDistribution = formattedDistribution.map(item => ({
+    const adjustedDistribution = formattedDistribution.map((item) => ({
       type: item.type,
       percentage: parseFloat(item.percentage.toFixed(2)), // Virgülden sonra iki basamak
     }));
@@ -83,9 +154,6 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     res.status(500).json({ status: "error", message: err.message });
   }
 });
-
-
-
 
 router.post("/createPortfolio", async (req, res) => {
   try {
@@ -149,8 +217,6 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
 
     portfolio.portfolioDetails.push(newPortfolioDetail);
 
-    
-
     await portfolio.save();
 
     res.status(201).json({
@@ -162,7 +228,5 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
-
 
 module.exports = router;
