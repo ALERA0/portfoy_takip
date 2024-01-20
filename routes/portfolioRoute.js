@@ -109,6 +109,19 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         .toFixed(2)
     );
 
+    const totalPurchaseValue = parseFloat(
+      updatedPortfolioDetails
+        .reduce((total, asset) => {
+          return total + asset.quantity * asset.purchasePrice;
+        }, 0)
+        .toFixed(2)
+    );
+
+    const fitStatus = (totalValue - totalPurchaseValue) / totalPurchaseValue;
+
+    const formattedFitStatus = parseFloat(fitStatus.toFixed(4)) * 100;
+
+
     // Her varlık türünün yüzdelik dağılımını hesapla
     const distribution = {};
 
@@ -169,7 +182,11 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "Portfolio detayları başarıyla getirildi",
-      portfolio: updatedPortfolio,
+      portfolio: {
+        ...updatedPortfolio.toObject(),
+        totalValue,
+        fitStatus: formattedFitStatus, 
+      },
       totalValue,
       distribution: adjustedDistribution,
       // portfolioDetails: updatedPortfolioDetails,
@@ -179,7 +196,6 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     res.status(500).json({ status: "error", message: err.message });
   }
 });
-
 
 router.post("/createPortfolio", async (req, res) => {
   try {
