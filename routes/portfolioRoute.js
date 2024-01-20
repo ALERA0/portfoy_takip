@@ -6,12 +6,15 @@ const router = express.Router();
 
 router.use(verifyJWT);
 
+
+
+
 router.get("/getAllPortfolio", async (req, res) => {
   try {
-    const portfolios = await Portfolio.find({ createdBy: req.user._id });
+    const portfolios = await Portfolio.find({ createdBy: req.user._id }).select("-portfolioDetails");
     res.status(200).json({
       status: "success",
-      message: "Portfolio listesi başarıyla  getirildi",
+      message: "Portfolio listesi başarıyla getirildi",
       portfolios,
     });
   } catch (err) {
@@ -25,17 +28,64 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
   try {
     const { portfolioId } = req.params;
     const portfolio = await Portfolio.findById(portfolioId);
+
+    if (!portfolio) {
+      return res.status(404).json({ status: "error", message: "Portfolio not found." });
+    }
+
+    // Toplam portföy değerini hesapla ve virgülden sonra iki basamaklı olarak düzenle
+    const totalValue = parseFloat(portfolio.portfolioDetails.reduce((total, asset) => {
+      return total + asset.quantity * asset.unitPrice;
+    }, 0).toFixed(2));
+
+    // Her varlık türünün yüzdelik dağılımını hesapla
+    const distribution = {};
+
+    portfolio.portfolioDetails.forEach(asset => {
+      const assetValue = asset.quantity * asset.unitPrice;
+      const percentage = (assetValue / totalValue) * 100;
+
+      // Yüzde değerini doğrudan eklemeye çalışın
+      if (!distribution[asset.type]) {
+        distribution[asset.type] = 0;
+      }
+      distribution[asset.type] += percentage;
+    });
+
+    // Dağılımı tek bir nesne olarak düzenle ve yüzde toplamlarını kontrol et
+    const formattedDistribution = Object.entries(distribution).map(([type, percentage]) => ({
+      type,
+      percentage: parseFloat(percentage.toFixed(2)),
+    }));
+
+    // Yüzde toplamlarını düzelt
+    const totalPercentage = formattedDistribution.reduce((total, item) => total + item.percentage, 0);
+    
+    // Yüzde toplamlarının hassasiyet kontrolü
+    if (Math.abs(totalPercentage - 100) > 0.01) {
+      return res.status(500).json({ status: "error", message: "Percentage calculation error." });
+    }
+
+    const adjustedDistribution = formattedDistribution.map(item => ({
+      type: item.type,
+      percentage: parseFloat(item.percentage.toFixed(2)), // Virgülden sonra iki basamak
+    }));
+
     res.status(200).json({
       status: "success",
       message: "Portfolio detayları başarıyla getirildi",
       portfolio,
-    })
+      totalValue,
+      distribution: adjustedDistribution,
+    });
   } catch (err) {
     console.error(err);
-
-    res.status(500).send(err);
+    res.status(500).json({ status: "error", message: err.message });
   }
 });
+
+
+
 
 router.post("/createPortfolio", async (req, res) => {
   try {
@@ -98,6 +148,9 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     });
 
     portfolio.portfolioDetails.push(newPortfolioDetail);
+
+    
+
     await portfolio.save();
 
     res.status(201).json({
