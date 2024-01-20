@@ -2,6 +2,7 @@ const express = require("express");
 const Portfolio = require("../models/Portfolio");
 const verifyJWT = require("../middleware/verifyJWT");
 const PortfolioDetail = require("../models/PortfolioDetail");
+const { default: mongoose } = require("mongoose");
 const router = express.Router();
 
 router.use(verifyJWT);
@@ -14,6 +15,11 @@ const allowedTypes = [
   "Crypto",
   "Fund",
 ];
+
+async function getLatestPrice(type, name) {
+  const model = mongoose.model(type);
+  return await model.findOne({ name }).sort({ addedDate: -1 });
+}
 
 router.get("/getAllPortfolio", async (req, res) => {
   try {
@@ -52,7 +58,6 @@ router.put("/updatePortfolio/:portfolioId", async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "Portfolio başarıyla güncellendi",
-      portfolio,
     });
   } catch (err) {
     res.status(500).send(err);
@@ -83,11 +88,23 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         .json({ status: "error", message: "Portfolio not found." });
     }
 
+    // Her bir varlık için lastPrice'ı güncelle
+    const updatedPortfolioDetails = await Promise.all(
+      portfolio.portfolioDetails.map(async (asset) => {
+        const latestData = await getLatestPrice(asset.type, asset.name);
+
+        return {
+          ...asset.toObject(),
+          lastPrice: parseFloat(latestData.lastPrice.replace(",", ".")),
+        };
+      })
+    );
+
     // Toplam portföy değerini hesapla ve virgülden sonra iki basamaklı olarak düzenle
     const totalValue = parseFloat(
-      portfolio.portfolioDetails
+      updatedPortfolioDetails
         .reduce((total, asset) => {
-          return total + asset.quantity * asset.unitPrice;
+          return total + asset.quantity * asset.lastPrice;
         }, 0)
         .toFixed(2)
     );
@@ -95,8 +112,8 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     // Her varlık türünün yüzdelik dağılımını hesapla
     const distribution = {};
 
-    portfolio.portfolioDetails.forEach((asset) => {
-      const assetValue = asset.quantity * asset.unitPrice;
+    updatedPortfolioDetails.forEach((asset) => {
+      const assetValue = asset.quantity * asset.lastPrice;
       const percentage = (assetValue / totalValue) * 100;
 
       // Yüzde değerini doğrudan eklemeye çalışın
@@ -142,18 +159,27 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       percentage: parseFloat(item.percentage.toFixed(2)), // Virgülden sonra iki basamak
     }));
 
+    // Güncellenmiş portföy detayları ile birlikte portföy bilgisini döndür
+    const updatedPortfolio = await Portfolio.findByIdAndUpdate(
+      portfolioId,
+      { portfolioDetails: updatedPortfolioDetails },
+      { new: true }
+    );
+
     res.status(200).json({
       status: "success",
       message: "Portfolio detayları başarıyla getirildi",
-      portfolio,
+      portfolio: updatedPortfolio,
       totalValue,
       distribution: adjustedDistribution,
+      // portfolioDetails: updatedPortfolioDetails,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ status: "error", message: err.message });
   }
 });
+
 
 router.post("/createPortfolio", async (req, res) => {
   try {
@@ -193,7 +219,7 @@ router.post("/createPortfolio", async (req, res) => {
 
 router.post("/addAsset/:portfolioId", async (req, res) => {
   try {
-    const { type, name, quantity, unitPrice, purchaseDate } = req.body;
+    const { type, name, quantity, purchasePrice, purchaseDate } = req.body;
     const portfolioId = req.params.portfolioId;
 
     // Validate type against allowed values
@@ -207,12 +233,22 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
       return res.status(404).json({ message: "Portfolio not found." });
     }
 
+    // Büyük harfe çevir
+    const upperCaseName = name.toUpperCase();
+
+    // İlgili modeli bul ve eklenen verinin en son değerini al
+    const model = mongoose.model(type);
+
+    const formattedPurchaseDate = purchaseDate
+      ? new Date(purchaseDate.replace(/-/g, "/"))
+      : new Date();
     const newPortfolioDetail = new PortfolioDetail({
       type,
-      name,
+      name: upperCaseName,
       quantity,
-      unitPrice,
-      purchaseDate,
+      purchasePrice,
+      purchaseDate: formattedPurchaseDate,
+      // Parse edilen lastPrice'ı kullan
     });
 
     portfolio.portfolioDetails.push(newPortfolioDetail);

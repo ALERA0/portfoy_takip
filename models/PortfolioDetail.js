@@ -16,7 +16,11 @@ const portfolioDetailSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  unitPrice: {
+  purchasePrice: {
+    type: Number,
+    required: false,
+  },
+  lastPrice: {
     type: Number,
     required: false,
   },
