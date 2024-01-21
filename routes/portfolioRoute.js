@@ -96,6 +96,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         const lastPrice = parseFloat(latestData.lastPrice.replace(",", "."));
         const currentAssetValue = asset.quantity * lastPrice;
         const purchaseValue = asset.quantity * asset.purchasePrice;
+        const totalAssetValue = asset.quantity * lastPrice;
         const profitPercentage =
           ((currentAssetValue - purchaseValue) / purchaseValue) * 100;
 
@@ -103,6 +104,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
           ...asset.toObject(),
           lastPrice,
           profitPercentage: parseFloat(profitPercentage.toFixed(2)),
+          totalAssetValue
         };
       })
     );
@@ -284,6 +286,39 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+router.delete('/removeAsset/:portfolioId/:assetId', async (req, res) => {
+  try {
+    const { portfolioId, assetId } = req.params;
+
+    // Portföyü bul
+    const portfolio = await Portfolio.findById(portfolioId);
+
+    if (!portfolio) {
+      return res.status(404).json({ status: 'error', message: 'Portfolio not found.' });
+    }
+
+    // Varlığı bul ve kaldır
+    const updatedPortfolioDetails = portfolio.portfolioDetails.filter(asset => asset._id.toString() !== assetId);
+
+    
+
+    // Güncellenmiş portföyü kaydet
+     await Portfolio.findByIdAndUpdate(
+      portfolioId,
+      { portfolioDetails: updatedPortfolioDetails },
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Varlık portfoyunuzden başarıyla çıkarıldı.',
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
