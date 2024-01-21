@@ -24,6 +24,10 @@ const portfolioDetailSchema = new mongoose.Schema({
     type: Number,
     required: false,
   },
+  profitPercentage: {
+    type: Number,
+    required: false,
+  },
   purchaseDate: {
     type: Date,
     required: false,

@@ -93,14 +93,21 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       portfolio.portfolioDetails.map(async (asset) => {
         const latestData = await getLatestPrice(asset.type, asset.name);
 
+        const lastPrice = parseFloat(latestData.lastPrice.replace(",", "."));
+        const currentAssetValue = asset.quantity * lastPrice;
+        const purchaseValue = asset.quantity * asset.purchasePrice;
+        const profitPercentage =
+          ((currentAssetValue - purchaseValue) / purchaseValue) * 100;
+
         return {
           ...asset.toObject(),
-          lastPrice: parseFloat(latestData.lastPrice.replace(",", ".")),
+          lastPrice,
+          profitPercentage: parseFloat(profitPercentage.toFixed(2)),
         };
       })
     );
 
-    // Toplam portföy değerini hesapla ve virgülden sonra iki basamaklı olarak düzenle
+    // Toplam portföy değerini ve toplam varlık maliyetini hesapla
     const totalValue = parseFloat(
       updatedPortfolioDetails
         .reduce((total, asset) => {
@@ -117,10 +124,10 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         .toFixed(2)
     );
 
-    const fitStatus = (totalValue - totalPurchaseValue) / totalPurchaseValue;
+    const fitStatus =
+      ((totalValue - totalPurchaseValue) / totalPurchaseValue) * 100;
 
-    const formattedFitStatus = parseFloat(fitStatus.toFixed(4)) * 100;
-
+    const formattedFitStatus = parseFloat(fitStatus.toFixed(4));
 
     // Her varlık türünün yüzdelik dağılımını hesapla
     const distribution = {};
@@ -185,9 +192,8 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       portfolio: {
         ...updatedPortfolio.toObject(),
         totalValue,
-        fitStatus: formattedFitStatus, 
+        fitStatus: formattedFitStatus,
       },
-      totalValue,
       distribution: adjustedDistribution,
       // portfolioDetails: updatedPortfolioDetails,
     });
