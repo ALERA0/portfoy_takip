@@ -16,10 +16,32 @@ const allowedTypes = [
   "Fund",
 ];
 
+const colorCodes = {
+  Stock: "#BCFE00",
+  Gold: "#FF7A00",
+  Currency: "#00EFFE",
+  TurkishLira: "#3401FF",
+  Crypto: "#DB00FF",
+  Fund: "#FF007A",
+};
+
 async function getLatestPrice(type, name) {
   const model = mongoose.model(type);
   return await model.findOne({ name }).sort({ addedDate: -1 });
 }
+
+function groupByType(portfolioDetails) {
+  const groupedDetails = {};
+  portfolioDetails.forEach((detail) => {
+    const type = detail.type;
+    if (!groupedDetails[type]) {
+      groupedDetails[type] = [];
+    }
+    groupedDetails[type].push(detail);
+  });
+  return groupedDetails;
+}
+
 
 router.get("/getAllPortfolio", async (req, res) => {
   try {
@@ -80,7 +102,8 @@ router.delete("/deletePortfolio/:portfolioId", async (req, res) => {
 router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
   try {
     const { portfolioId } = req.params;
-    const portfolio = await Portfolio.findById(portfolioId);
+    const userId = req.user._id;
+    const portfolio = await Portfolio.findOne({ _id: portfolioId, createdBy: userId });
 
     if (!portfolio) {
       return res
@@ -106,6 +129,23 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
           profitPercentage: parseFloat(profitPercentage.toFixed(2)),
           totalAssetValue
         };
+      })
+    );
+
+    // Her varlık türüne göre objeleri grupla
+    const groupedPortfolioDetails = updatedPortfolioDetails.reduce((grouped, asset) => {
+      if (!grouped[asset.type]) {
+        grouped[asset.type] = [];
+      }
+      grouped[asset.type].push(asset);
+      return grouped;
+    }, {});
+
+    // Gruplanmış verileri array'e dönüştür
+    const formattedPortfolioDetails = Object.entries(groupedPortfolioDetails).map(
+      ([type, assets]) => ({
+        type,
+        assets,
       })
     );
 
@@ -163,22 +203,10 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       }
     });
 
-    // Yüzde toplamlarını düzelt
-    const totalPercentage = formattedDistribution.reduce(
-      (total, item) => total + item.percentage,
-      0
-    );
-
-    // Yüzde toplamlarının hassasiyet kontrolü
-    if (Math.abs(totalPercentage - 100) > 0.01) {
-      return res
-        .status(500)
-        .json({ status: "error", message: "Percentage calculation error." });
-    }
-
     const adjustedDistribution = formattedDistribution.map((item) => ({
       type: item.type,
-      percentage: parseFloat(item.percentage.toFixed(2)), // Virgülden sonra iki basamak
+      percentage: parseFloat(item.percentage.toFixed(2)),
+      color: colorCodes[item.type] || "#000000",
     }));
 
     // Güncellenmiş portföy detayları ile birlikte portföy bilgisini döndür
@@ -195,15 +223,16 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         ...updatedPortfolio.toObject(),
         totalValue,
         fitStatus: formattedFitStatus,
+        portfolioDetails: formattedPortfolioDetails, // Gruplanmış detayları ekleyin
       },
       distribution: adjustedDistribution,
-      // portfolioDetails: updatedPortfolioDetails,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ status: "error", message: err.message });
   }
 });
+
 
 router.post("/createPortfolio", async (req, res) => {
   try {
@@ -246,22 +275,24 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     const { type, name, quantity, purchasePrice, purchaseDate } = req.body;
     const portfolioId = req.params.portfolioId;
 
+    if(!type || !name || !quantity || !purchasePrice || !purchaseDate){
+      return res.status(400).json({status:"error", message: "Lütfen bütün alanları doldurunuz." });
+    }
+
     // Validate type against allowed values
     if (!["Stock", "Gold", "Currency"].includes(type)) {
-      return res.status(400).json({ message: "Invalid type value." });
+      return res.status(400).json({status: "error", message: "Geçersiz varlık türü." });
     }
 
     const portfolio = await Portfolio.findById(portfolioId);
 
     if (!portfolio) {
-      return res.status(404).json({ message: "Portfolio not found." });
+      return res.status(404).json({ status:"error",message: "Portfolio bulunamadı." });
     }
 
     // Büyük harfe çevir
     const upperCaseName = name.toUpperCase();
 
-    // İlgili modeli bul ve eklenen verinin en son değerini al
-    const model = mongoose.model(type);
 
     const formattedPurchaseDate = purchaseDate
       ? new Date(purchaseDate.replace(/-/g, "/"))

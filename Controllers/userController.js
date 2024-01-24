@@ -63,11 +63,12 @@ const createNewUser = asyncHandler(async (req, res) => {
       portfolioDetails: [], // Boş bir portföy
     };
 
-    await Portfolio.create(defaultPortfolio);
+   const portfolio =  await Portfolio.create(defaultPortfolio);
 
     res.status(201).json({
       status: "success",
       message: `New user ${username} created with a default portfolio`,
+      portfolioId: portfolio._id
     });
   } else {
     res

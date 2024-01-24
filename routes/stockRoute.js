@@ -5,9 +5,7 @@ const Stock = require("../models/Stock");
 const verifyJWT = require("../middleware/verifyJWT.js");
 const redisClient = require("../shared/redis.js")();
 
-
 router.use(verifyJWT);
-
 
 router.get("/add-stocks", async (req, res) => {
   try {
@@ -51,7 +49,6 @@ router.get("/getAllStock", async (req, res) => {
   }
 });
 
-
 router.get("/getStockDetail/:name", async (req, res) => {
   try {
     const { name } = req.params;
@@ -72,12 +69,16 @@ router.get("/getLastStockDetail/:name", async (req, res) => {
   try {
     const { name } = req.params;
 
-    const latestStockDetail = await Stock.findOne({ name: new RegExp(name, "i") })
+    const latestStockDetail = await Stock.findOne({
+      name: new RegExp(name, "i"),
+    })
       .sort({ addedDate: -1 })
       .limit(1);
 
     if (!latestStockDetail) {
-      return res.status(404).json({ status: "error", message: "Hisse detayı bulunamadı." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Hisse detayı bulunamadı." });
     }
 
     res.status(200).json({
@@ -90,5 +91,23 @@ router.get("/getLastStockDetail/:name", async (req, res) => {
   }
 });
 
+router.post("/searchStock/:searchParam", async (req, res) => {
+  try {
+    const { searchParam } = req.params;
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const data = await Stock.find({
+      name: new RegExp(searchParam, "i"),
+      addedDate: { $gte: today },
+    });
+    res.status(200).json({
+      status: "success",
+      message: "Hisseler başarıyla getirildi",
+      data,
+    });
+  } catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
 
 module.exports = router;
