@@ -135,17 +135,21 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     // Her varlık türüne göre objeleri grupla
     const groupedPortfolioDetails = updatedPortfolioDetails.reduce((grouped, asset) => {
       if (!grouped[asset.type]) {
-        grouped[asset.type] = [];
+        grouped[asset.type] = {
+          color: colorCodes[asset.type] || "#000000", // Renk bilgisini ekleyin
+          assets: [],
+        };
       }
-      grouped[asset.type].push(asset);
+      grouped[asset.type].assets.push(asset);
       return grouped;
     }, {});
 
     // Gruplanmış verileri array'e dönüştür
     const formattedPortfolioDetails = Object.entries(groupedPortfolioDetails).map(
-      ([type, assets]) => ({
+      ([type, { assets, color }]) => ({
         type,
         assets,
+        color, // Renk bilgisini ekleyin
       })
     );
 
@@ -234,6 +238,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
 });
 
 
+
 router.post("/createPortfolio", async (req, res) => {
   try {
     const { name } = req.body;
@@ -275,24 +280,35 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     const { type, name, quantity, purchasePrice, purchaseDate } = req.body;
     const portfolioId = req.params.portfolioId;
 
-    if(!type || !name || !quantity || !purchasePrice || !purchaseDate){
-      return res.status(400).json({status:"error", message: "Lütfen bütün alanları doldurunuz." });
+    if (!type || !name || !quantity || !purchasePrice || !purchaseDate) {
+      return res.status(400).json({ status: "error", message: "Lütfen bütün alanları doldurunuz." });
     }
 
     // Validate type against allowed values
     if (!["Stock", "Gold", "Currency"].includes(type)) {
-      return res.status(400).json({status: "error", message: "Geçersiz varlık türü." });
+      return res.status(400).json({ status: "error", message: "Geçersiz varlık türü." });
     }
 
     const portfolio = await Portfolio.findById(portfolioId);
 
     if (!portfolio) {
-      return res.status(404).json({ status:"error",message: "Portfolio bulunamadı." });
+      return res.status(404).json({ status: "error", message: "Portfolio bulunamadı." });
     }
+
+    // Kontrol: Aynı isim ve türde varlık zaten portföyde var mı?
+    const existingAsset = portfolio.portfolioDetails.find(asset =>
+      asset.name === name.toUpperCase() && asset.type === type
+    );
+
+    // if (existingAsset) {
+    //   return res.status(400).json({
+    //     status: "error",
+    //     message: "Bu varlık zaten portföyde bulunuyor.",
+    //   });
+    // }
 
     // Büyük harfe çevir
     const upperCaseName = name.toUpperCase();
-
 
     const formattedPurchaseDate = purchaseDate
       ? new Date(purchaseDate.replace(/-/g, "/"))
@@ -303,7 +319,6 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
       quantity,
       purchasePrice,
       purchaseDate: formattedPurchaseDate,
-      // Parse edilen lastPrice'ı kullan
     });
 
     portfolio.portfolioDetails.push(newPortfolioDetail);
@@ -319,6 +334,7 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 
 router.delete('/removeAsset/:portfolioId/:assetId', async (req, res) => {
   try {
