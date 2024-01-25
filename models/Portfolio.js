@@ -12,6 +12,19 @@ const portfolioSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  totalAssetValue: {
+    type: Number,
+    required: false,
+  },
+  totalProfitPercentage: {
+    type: Number,
+    required: false,
+  },
+  totalPurchaseValue: {
+    type: Number,
+    required: false,
+  },
+
 });
 
 portfolioSchema.pre("save", async function (next) {
@@ -21,7 +34,9 @@ portfolioSchema.pre("save", async function (next) {
     if (!detail.lastPrice && detail.type) {
       // İlgili modeli bul ve eklenen verinin en son değerini al
       const model = mongoose.model(detail.type);
-      const latestData = await model.findOne({ name: detail.name }).sort({ addedDate: -1 });
+      const latestData = await model
+        .findOne({ name: detail.name })
+        .sort({ addedDate: -1 });
 
       // Eğer en son veri varsa, lastPrice'ı güncelle
       if (latestData) {

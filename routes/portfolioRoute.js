@@ -42,7 +42,6 @@ function groupByType(portfolioDetails) {
   return groupedDetails;
 }
 
-
 router.get("/getAllPortfolio", async (req, res) => {
   try {
     const portfolios = await Portfolio.find({ createdBy: req.user._id }).select(
@@ -103,7 +102,10 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
   try {
     const { portfolioId } = req.params;
     const userId = req.user._id;
-    const portfolio = await Portfolio.findOne({ _id: portfolioId, createdBy: userId });
+    const portfolio = await Portfolio.findOne({
+      _id: portfolioId,
+      createdBy: userId,
+    });
 
     if (!portfolio) {
       return res
@@ -117,41 +119,42 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         const latestData = await getLatestPrice(asset.type, asset.name);
 
         const lastPrice = parseFloat(latestData.lastPrice.replace(",", "."));
-        const currentAssetValue = asset.quantity * lastPrice;
-        const purchaseValue = asset.quantity * asset.purchasePrice;
         const totalAssetValue = asset.quantity * lastPrice;
         const profitPercentage =
-          ((currentAssetValue - purchaseValue) / purchaseValue) * 100;
+          ((lastPrice - asset.purchasePrice) / lastPrice) * 100;
 
         return {
           ...asset.toObject(),
           lastPrice,
           profitPercentage: parseFloat(profitPercentage.toFixed(2)),
-          totalAssetValue
+          totalAssetValue,
         };
       })
     );
 
     // Her varlık türüne göre objeleri grupla
-    const groupedPortfolioDetails = updatedPortfolioDetails.reduce((grouped, asset) => {
-      if (!grouped[asset.type]) {
-        grouped[asset.type] = {
-          color: colorCodes[asset.type] || "#000000", // Renk bilgisini ekleyin
-          assets: [],
-        };
-      }
-      grouped[asset.type].assets.push(asset);
-      return grouped;
-    }, {});
+    const groupedPortfolioDetails = updatedPortfolioDetails.reduce(
+      (grouped, asset) => {
+        if (!grouped[asset.type]) {
+          grouped[asset.type] = {
+            color: colorCodes[asset.type] || "#000000", // Renk bilgisini ekleyin
+            assets: [],
+          };
+        }
+        grouped[asset.type].assets.push(asset);
+        return grouped;
+      },
+      {}
+    );
 
     // Gruplanmış verileri array'e dönüştür
-    const formattedPortfolioDetails = Object.entries(groupedPortfolioDetails).map(
-      ([type, { assets, color }]) => ({
-        type,
-        assets,
-        color, // Renk bilgisini ekleyin
-      })
-    );
+    const formattedPortfolioDetails = Object.entries(
+      groupedPortfolioDetails
+    ).map(([type, { assets, color }]) => ({
+      type,
+      assets,
+      color, // Renk bilgisini ekleyin
+    }));
 
     // Toplam portföy değerini ve toplam varlık maliyetini hesapla
     const totalValue = parseFloat(
@@ -216,7 +219,12 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     // Güncellenmiş portföy detayları ile birlikte portföy bilgisini döndür
     const updatedPortfolio = await Portfolio.findByIdAndUpdate(
       portfolioId,
-      { portfolioDetails: updatedPortfolioDetails },
+      {
+        totalAssetValue: totalValue,
+        totalProfitPercentage: formattedFitStatus,
+        totalPurchaseValue: totalPurchaseValue,
+        portfolioDetails: updatedPortfolioDetails,
+      },
       { new: true }
     );
 
@@ -225,8 +233,8 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       message: "Portfolio detayları başarıyla getirildi",
       portfolio: {
         ...updatedPortfolio.toObject(),
-        totalValue,
-        fitStatus: formattedFitStatus,
+        // totalValue,
+        // fitStatus: formattedFitStatus,
         portfolioDetails: formattedPortfolioDetails, // Gruplanmış detayları ekleyin
       },
       distribution: adjustedDistribution,
@@ -236,8 +244,6 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     res.status(500).json({ status: "error", message: err.message });
   }
 });
-
-
 
 router.post("/createPortfolio", async (req, res) => {
   try {
@@ -281,31 +287,58 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     const portfolioId = req.params.portfolioId;
 
     if (!type || !name || !quantity || !purchasePrice || !purchaseDate) {
-      return res.status(400).json({ status: "error", message: "Lütfen bütün alanları doldurunuz." });
+      return res.status(400).json({
+        status: "error",
+        message: "Lütfen bütün alanları doldurunuz.",
+      });
     }
 
     // Validate type against allowed values
     if (!["Stock", "Gold", "Currency"].includes(type)) {
-      return res.status(400).json({ status: "error", message: "Geçersiz varlık türü." });
+      return res
+        .status(400)
+        .json({ status: "error", message: "Geçersiz varlık türü." });
     }
 
     const portfolio = await Portfolio.findById(portfolioId);
 
     if (!portfolio) {
-      return res.status(404).json({ status: "error", message: "Portfolio bulunamadı." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Portfolio bulunamadı." });
     }
 
     // Kontrol: Aynı isim ve türde varlık zaten portföyde var mı?
-    const existingAsset = portfolio.portfolioDetails.find(asset =>
-      asset.name === name.toUpperCase() && asset.type === type
+    const existingAsset = portfolio.portfolioDetails.find(
+      (asset) => asset.name === name.toUpperCase() && asset.type === type
     );
 
-    // if (existingAsset) {
-    //   return res.status(400).json({
-    //     status: "error",
-    //     message: "Bu varlık zaten portföyde bulunuyor.",
-    //   });
-    // }
+    if (existingAsset) {
+      const totalQuantity = existingAsset.quantity + quantity;
+      const totalPurchaseValue =
+        existingAsset.purchasePrice * existingAsset.quantity +
+        purchasePrice * quantity;
+      const newPurchasePrice = totalPurchaseValue / totalQuantity;
+      const newProfitPercentage =
+        ((newPurchasePrice - existingAsset.purchasePrice) /
+          existingAsset.purchasePrice) *
+        100;
+      const newTotalAssetValue = totalQuantity * existingAsset.lastPrice;
+
+      // Update the existing asset with the new values
+      existingAsset.quantity = totalQuantity;
+      existingAsset.purchasePrice = newPurchasePrice;
+      existingAsset.profitPercentage = newProfitPercentage;
+      existingAsset.totalAssetValue = newTotalAssetValue;
+
+      await portfolio.save();
+
+      return res.status(200).json({
+        status: "success",
+        message: "Existing portfolio detail successfully updated.",
+        updatedPortfolioDetail: existingAsset,
+      });
+    }
 
     // Büyük harfe çevir
     const upperCaseName = name.toUpperCase();
@@ -336,7 +369,7 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
 });
 
 
-router.delete('/removeAsset/:portfolioId/:assetId', async (req, res) => {
+router.delete("/removeAsset/:portfolioId/:assetId", async (req, res) => {
   try {
     const { portfolioId, assetId } = req.params;
 
@@ -344,28 +377,30 @@ router.delete('/removeAsset/:portfolioId/:assetId', async (req, res) => {
     const portfolio = await Portfolio.findById(portfolioId);
 
     if (!portfolio) {
-      return res.status(404).json({ status: 'error', message: 'Portfolio not found.' });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Portfolio not found." });
     }
 
     // Varlığı bul ve kaldır
-    const updatedPortfolioDetails = portfolio.portfolioDetails.filter(asset => asset._id.toString() !== assetId);
-
-    
+    const updatedPortfolioDetails = portfolio.portfolioDetails.filter(
+      (asset) => asset._id.toString() !== assetId
+    );
 
     // Güncellenmiş portföyü kaydet
-     await Portfolio.findByIdAndUpdate(
+    await Portfolio.findByIdAndUpdate(
       portfolioId,
       { portfolioDetails: updatedPortfolioDetails },
       { new: true }
     );
 
     res.status(200).json({
-      status: 'success',
-      message: 'Varlık portfoyunuzden başarıyla çıkarıldı.',
+      status: "success",
+      message: "Varlık portfoyunuzden başarıyla çıkarıldı.",
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ status: 'error', message: err.message });
+    res.status(500).json({ status: "error", message: err.message });
   }
 });
 
