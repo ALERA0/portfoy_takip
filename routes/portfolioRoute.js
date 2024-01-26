@@ -245,6 +245,54 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
   }
 });
 
+router.get("/getAssetPercentages/:portfolioId/:assetType", async (req, res) => {
+  try {
+    const { portfolioId, assetType } = req.params;
+    const userId = req.user._id;
+
+    const portfolio = await Portfolio.findOne({
+      _id: portfolioId,
+      createdBy: userId,
+    });
+
+    if (!portfolio) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "Portfolio not found." });
+    }
+
+    // Belirtilen varlık tipindeki varlıkları filtrele
+    const filteredAssets = portfolio.portfolioDetails.filter(
+      (asset) => asset.type === assetType
+    );
+
+    // Toplam varlık değerini hesapla
+    const totalPortfolioValue = filteredAssets.reduce(
+      (total, asset) => total + asset.totalAssetValue,
+      0
+    );
+
+    // Her bir varlığın yüzdeliğini hesapla
+    const assetPercentages = filteredAssets.map((asset) => ({
+      name: asset.name,
+      quantity: asset.quantity,
+      progressBar: ((asset.totalAssetValue / totalPortfolioValue)),
+      percentage: parseFloat(
+        ((asset.totalAssetValue / totalPortfolioValue) * 100).toFixed(2)
+      ),
+    }));
+
+    res.status(200).json({
+      status: "success",
+      message: `${assetType} varlık yüzdeleri başarıyla getirildi.`,
+      assetPercentages,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: "error", message: err.message });
+  }
+});
+
 router.post("/createPortfolio", async (req, res) => {
   try {
     const { name } = req.body;

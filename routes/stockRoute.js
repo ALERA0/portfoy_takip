@@ -53,17 +53,25 @@ router.get("/getStockDetail/:name", async (req, res) => {
   try {
     const { name } = req.params;
 
+    // Belirli bir hissenin adına ve en son tarihli veriye göre sıralanmış veriyi al
+    const latestData = await Stock.findOne({ name: new RegExp(name, "i") })
+      .sort({ addedDate: -1 })
+      .limit(1);
+
+    // Tüm veriyi hissenin adına göre filtrele
     const data = await Stock.find({ name: new RegExp(name, "i") });
 
     res.status(200).json({
       status: "success",
       message: "Hisse detayı başarıyla getirildi",
+      lastPrice: latestData ? parseFloat(latestData.lastPrice.replace(",", ".")) : null,
       data,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 
 router.get("/getLastStockDetail/:name", async (req, res) => {
   try {

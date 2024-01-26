@@ -55,9 +55,15 @@ router.get("/getCurrencyDetail/:name", async (req, res) => {
 
     const data = await Currency.find({ name: new RegExp(name, "i") });
 
+    const latestCurrencyDetail = await Currency.findOne({ name: new RegExp(name, "i") })
+      .sort({ addedDate: -1 })
+      .limit(1);
+
     res.status(200).json({
       status: "success",
       message: "Döviz detayı başarıyla getirildi",
+      lastPrice: latestCurrencyDetail ? parseFloat(latestCurrencyDetail.lastPrice.replace(",", ".")) : null,
+
       data,
     });
   } catch (error) {

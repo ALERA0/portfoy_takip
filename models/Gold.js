@@ -5,7 +5,7 @@ const goldSchema = new mongoose.Schema({
     type: String,
     index: true,
   },
-  price: {
+  lastPrice: {
     type: String,
   },
   changePercent: {

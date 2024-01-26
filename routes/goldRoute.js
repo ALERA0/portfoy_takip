@@ -58,9 +58,14 @@ router.get("/getGoldDetail/:name", async (req, res) => {
 
     const data = await Gold.find({ name: new RegExp(name, "i") });
 
+    const latestGoldDetail = await Gold.findOne({ name: new RegExp(name, "i") })
+      .sort({ addedDate: -1 })
+      .limit(1);
+
     res.status(200).json({
       status: "success",
       message: "Gold detayı başarıyla getirildi",
+      lastPrice: latestGoldDetail ? parseFloat(latestGoldDetail.lastPrice.replace(",", ".")) : null,
       data,
     });
   } catch (error) {
@@ -83,7 +88,9 @@ router.get("/getLastGoldDetail/:name", async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "Altın / Gümüş detayı başarıyla getirildi",
+      latestLastPrice: latestGoldDetail ? parseFloat(latestGoldDetail.lastPrice.replace(",", ".")) : null,
       data: latestGoldDetail,
+
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
