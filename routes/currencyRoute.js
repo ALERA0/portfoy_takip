@@ -1,20 +1,19 @@
-const express = require('express');
-const saveCurrencyDataToDb = require('../scrapeSave/saveCurrencyDataToDb');
-const Currency = require('../models/Currency');
-const verifyJWT = require('../middleware/verifyJWT.js');
+const express = require("express");
+const saveCurrencyDataToDb = require("../scrapeSave/saveCurrencyDataToDb");
+const Currency = require("../models/Currency");
+const verifyJWT = require("../middleware/verifyJWT.js");
 const router = express.Router();
 const redisClient = require("../shared/redis.js")();
 
 router.use(verifyJWT);
 
-
-router.get('/add-currencies', async (req, res) => {
+router.get("/add-currencies", async (req, res) => {
   try {
     await saveCurrencyDataToDb();
-    res.send('Currency data updated successfully');
+    res.send("Currency data updated successfully");
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error updating currency data');
+    res.status(500).send("Error updating currency data");
   }
 });
 
@@ -49,39 +48,47 @@ router.get("/getAllCurrency", async (req, res) => {
   }
 });
 
-router.get("/getCurrencyDetail/:name", async (req, res) => {
+router.get("/getCurrencyDetail/:name/:numberOfDays", async (req, res) => {
   try {
-    const { name } = req.params;
+    const { name, numberOfDays } = req.params;
 
-    const data = await Currency.find({ name: new RegExp(name, "i") });
-
-    const latestCurrencyDetail = await Currency.findOne({ name: new RegExp(name, "i") })
+    const data = await Currency.find({ name: new RegExp(name, "i") })
       .sort({ addedDate: -1 })
-      .limit(1);
+      .limit(parseInt(numberOfDays));
+
+    const formattedData = data.map((item, index, array) => ({
+      value: parseFloat(item.lastPrice.replace(",", ".")),
+      date: item.addedDate.toISOString().split("T")[0],
+      label:
+        index === 0 || index === array.length - 1
+          ? item.addedDate.toISOString().split("T")[0]
+          : null,
+    }));
 
     res.status(200).json({
       status: "success",
       message: "Döviz detayı başarıyla getirildi",
-      lastPrice: latestCurrencyDetail ? parseFloat(latestCurrencyDetail.lastPrice.replace(",", ".")) : null,
-
-      data,
+      data: formattedData,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
 
-
 router.get("/getLastCurrencyDetail/:name", async (req, res) => {
   try {
     const { name } = req.params;
 
-    const latestCurrencyDetail = await Currency.findOne({ name: new RegExp(name, "i") })
+    const latestCurrencyDetail = await Currency.findOne({
+      name: new RegExp(name, "i"),
+    })
       .sort({ addedDate: -1 })
       .limit(1);
 
     if (!latestCurrencyDetail) {
-      return res.status(404).json({ status: "error", message: "Döviz detayı bulunamadı." });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Döviz detayı bulunamadı." });
     }
 
     res.status(200).json({

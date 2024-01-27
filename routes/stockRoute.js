@@ -49,28 +49,33 @@ router.get("/getAllStock", async (req, res) => {
   }
 });
 
-router.get("/getStockDetail/:name", async (req, res) => {
+router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
   try {
-    const { name } = req.params;
+    const { name, numberOfDays } = req.params;
 
-    // Belirli bir hissenin adına ve en son tarihli veriye göre sıralanmış veriyi al
-    const latestData = await Stock.findOne({ name: new RegExp(name, "i") })
+    // Belirli bir hissenin adına ve belirtilen sayıda gün içindeki verileri al
+    const data = await Stock.find({ name: new RegExp(name, "i") })
       .sort({ addedDate: -1 })
-      .limit(1);
+      .limit(parseInt(numberOfDays));
 
-    // Tüm veriyi hissenin adına göre filtrele
-    const data = await Stock.find({ name: new RegExp(name, "i") });
+    // Verileri istenen formata çevir
+    const formattedData = data.map((item, index, array) => ({
+      value: parseFloat(item.lastPrice.replace(",", ".")),
+      date: item.addedDate.toISOString().split("T")[0],
+      label: index === 0 || index === array.length - 1 ? item.addedDate.toISOString().split("T")[0] : null,
+    }));
 
     res.status(200).json({
       status: "success",
       message: "Hisse detayı başarıyla getirildi",
-      lastPrice: latestData ? parseFloat(latestData.lastPrice.replace(",", ".")) : null,
-      data,
+      data: formattedData,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
+
 
 
 router.get("/getLastStockDetail/:name", async (req, res) => {

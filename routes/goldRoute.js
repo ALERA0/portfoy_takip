@@ -50,52 +50,71 @@ router.get("/getAllGold", async (req, res) => {
   }
 });
 
-router.get("/getGoldDetail/:name", async (req, res) => {
+router.get("/getGoldDetail/:name/:numberOfDays", async (req, res) => {
   try {
-    let { name } = req.params;
+    const { name,numberOfDays } = req.params;
 
-    name = encodeURIComponent(name);
+    
+    nameEncoded = encodeURIComponent(name);
 
-    const data = await Gold.find({ name: new RegExp(name, "i") });
 
-    const latestGoldDetail = await Gold.findOne({ name: new RegExp(name, "i") })
-      .sort({ addedDate: -1 })
-      .limit(1);
+    const data = await Gold.find({ name: new RegExp(nameEncoded, "i") })
+    .sort({ addedDate: -1 })
+    .limit(parseInt(numberOfDays));
 
-    res.status(200).json({
-      status: "success",
-      message: "Gold detayı başarıyla getirildi",
-      lastPrice: latestGoldDetail ? parseFloat(latestGoldDetail.lastPrice.replace(",", ".")) : null,
-      data,
-    });
-  } catch (error) {
-    res.status(500).json({ status: "error", message: error.message });
-  }
-});
-
-router.get("/getLastGoldDetail/:name", async (req, res) => {
-  try {
-    const { name } = req.params;
-
-    const latestGoldDetail = await Gold.findOne({ name: new RegExp(name, "i") })
-      .sort({ addedDate: -1 })
-      .limit(1);
-
-    if (!latestGoldDetail) {
-      return res.status(404).json({ status: "error", message: "Altın / Gümüş bulunamadı." });
-    }
+    const formattedData = data.map((item, index, array) => ({
+      value: parseFloat(item.lastPrice.replace(",", ".")),
+      date: item.addedDate.toISOString().split("T")[0],
+      label:
+        index === 0 || index === array.length - 1
+          ? item.addedDate.toISOString().split("T")[0]
+          : null,
+    }));
 
     res.status(200).json({
       status: "success",
       message: "Altın / Gümüş detayı başarıyla getirildi",
-      latestLastPrice: latestGoldDetail ? parseFloat(latestGoldDetail.lastPrice.replace(",", ".")) : null,
-      data: latestGoldDetail,
+      data: formattedData,
+    });
+  }  catch (error) {
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
 
+router.get("/getLastGoldDetail/:name/:numberOfDays", async (req, res) => {
+  try {
+    const { name,numberOfDays } = req.params;
+
+    
+    nameEncoded = encodeURIComponent(name);
+
+
+    const data = await Gold.find({ name: new RegExp(nameEncoded, "i") })
+    .sort({ addedDate: -1 })
+    .limit(parseInt(numberOfDays));
+
+    const formattedData = data.map((item, index, array) => ({
+      value: parseFloat(item.lastPrice.replace(",", ".")),
+      date: item.addedDate.toISOString().split("T")[0],
+      label:
+        index === 0 || index === array.length - 1
+          ? item.addedDate.toISOString().split("T")[0]
+          : null,
+    }));
+
+    res.status(200).json({
+      status: "success",
+      message: "Altın / Gümüş detayı başarıyla getirildi",
+      data: formattedData,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
+
+
+
 
 
 module.exports = router;

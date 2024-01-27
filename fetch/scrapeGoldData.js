@@ -15,7 +15,7 @@ const scrapeGoldData = async () => {
 
       goldData.push({
         name,
-        lastPricek,
+        lastPrice,
         changePercent
       });
     });
