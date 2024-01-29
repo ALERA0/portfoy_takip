@@ -58,6 +58,8 @@ router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
       .sort({ addedDate: -1 })
       .limit(parseInt(numberOfDays));
 
+      const stockName = await Stock.findOne({ name: new RegExp(name, "i") });
+
     // Verileri istenen formata çevir
     const formattedData = data.map((item, index, array) => ({
       value: parseFloat(item.lastPrice.replace(",", ".")),
@@ -68,6 +70,7 @@ router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "Hisse detayı başarıyla getirildi",
+      name: stockName.name,
       data: formattedData,
     });
   } catch (error) {

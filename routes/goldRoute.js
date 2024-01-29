@@ -52,34 +52,37 @@ router.get("/getAllGold", async (req, res) => {
 
 router.get("/getGoldDetail/:name/:numberOfDays", async (req, res) => {
   try {
-    const { name,numberOfDays } = req.params;
+    const { name, numberOfDays } = req.params;
 
-    
-    nameEncoded = encodeURIComponent(name);
+    const nameEncoded = encodeURIComponent(name);
 
+    console.log(nameEncoded);
+
+    const goldName = await Gold.findOne({ name: new RegExp(nameEncoded, "i") });
 
     const data = await Gold.find({ name: new RegExp(nameEncoded, "i") })
-    .sort({ addedDate: -1 })
-    .limit(parseInt(numberOfDays));
+      .sort({ addedDate: -1 })
+      .limit(parseInt(numberOfDays));
+
+      console.log(data,"data")
 
     const formattedData = data.map((item, index, array) => ({
       value: parseFloat(item.lastPrice.replace(",", ".")),
       date: item.addedDate.toISOString().split("T")[0],
-      label:
-        index === 0 || index === array.length - 1
-          ? item.addedDate.toISOString().split("T")[0]
-          : null,
+      label: index === 0 || index === array.length - 1 ? item.addedDate.toISOString().split("T")[0] : null,
     }));
 
-    res.status(200).json({
+    const responseData = {
       status: "success",
       message: "Altın / Gümüş detayı başarıyla getirildi",
       data: formattedData,
-    });
-  }  catch (error) {
+    };
+    res.status(200).json(responseData);
+  } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 
 router.get("/getLastGoldDetail/:name/:numberOfDays", async (req, res) => {
   try {

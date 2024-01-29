@@ -3,6 +3,8 @@ const Portfolio = require("../models/Portfolio");
 const verifyJWT = require("../middleware/verifyJWT");
 const PortfolioDetail = require("../models/PortfolioDetail");
 const { default: mongoose } = require("mongoose");
+const Currency = require("../models/Currency");
+const Gold = require("../models/Gold");
 const router = express.Router();
 
 router.use(verifyJWT);
@@ -209,6 +211,9 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         });
       }
     });
+
+    const order = ["Stock", "Currency", "Gold", "Crypto", "Fund", "TurkishLira"];
+formattedDistribution.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
 
     const adjustedDistribution = formattedDistribution.map((item) => ({
       type: item.type,
@@ -451,5 +456,86 @@ router.delete("/removeAsset/:portfolioId/:assetId", async (req, res) => {
     res.status(500).json({ status: "error", message: err.message });
   }
 });
+
+
+router.get("/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays", async (req, res) => {
+  try {
+    const { portfolioId, assetId, type, name, numberOfDays } = req.params;
+    const userId = req.user._id;
+
+    // Belirtilen portföy ve varlık bilgilerini kontrol et
+    const portfolio = await Portfolio.findOne({
+      _id: portfolioId,
+      createdBy: userId,
+    });
+
+    if (!portfolio) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "Portfolio not found." });
+    }
+
+    // Belirtilen varlık (asset) bilgisini bul
+    const asset = portfolio.portfolioDetails.find((item) => item._id.toString() === assetId);
+
+    if (!asset) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "Asset not found in the portfolio." });
+    }
+
+    // Belirtilen model (type) üzerinden tarihsel verileri al
+    let historicalData = [];
+    switch (type) {
+      case "Stock":
+        historicalData = await Stock.find({ name: new RegExp(name, "i") })
+          .sort({ addedDate: -1 })
+          .limit(parseInt(numberOfDays));
+        break;
+      case "Currency":
+        historicalData = await Currency.find({ name: new RegExp(name, "i") })
+          .sort({ addedDate: -1 })
+          .limit(parseInt(numberOfDays));
+        break;
+      case "Gold":
+        historicalData = await Gold.find({ name: new RegExp(name, "i") })
+          .sort({ addedDate: -1 })
+          .limit(parseInt(numberOfDays));
+        break;
+      // Diğer modeller için gerekli case'leri ekleyebilirsiniz.
+      default:
+        return res
+          .status(400)
+          .json({ status: "error", message: "Invalid asset type." });
+    }
+
+    // Verileri istenen formata çevir
+    const formattedHistoricalData = historicalData.map((item, index, array) => ({
+      value: parseFloat(item.lastPrice.replace(",", ".")),
+      date: item.addedDate.toISOString().split("T")[0],
+      label:
+        index === 0 || index === array.length - 1
+          ? item.addedDate.toISOString().split("T")[0]
+          : null,
+    }));
+
+    res.status(200).json({
+      status: "success",
+      message: "Asset detayları başarıyla getirildi",
+      assetDetails: {
+        name: asset.name,
+        quantity: parseFloat(asset.quantity), // Virgülden sonra 2 basamak göster
+        lastPrice: parseFloat(asset.lastPrice.toFixed(2)),
+        purchaseDate: asset.purchaseDate.toISOString().split("T")[0],
+      },
+      historicalData: formattedHistoricalData,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ status: "error", message: error.message });
+  }
+});
+
+
 
 module.exports = router;

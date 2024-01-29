@@ -52,6 +52,8 @@ router.get("/getCurrencyDetail/:name/:numberOfDays", async (req, res) => {
   try {
     const { name, numberOfDays } = req.params;
 
+    const currencyName = await Currency.findOne({ name: new RegExp(name, "i") });
+
     const data = await Currency.find({ name: new RegExp(name, "i") })
       .sort({ addedDate: -1 })
       .limit(parseInt(numberOfDays));
@@ -68,6 +70,7 @@ router.get("/getCurrencyDetail/:name/:numberOfDays", async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "Döviz detayı başarıyla getirildi",
+      name: currencyName.name,
       data: formattedData,
     });
   } catch (error) {
