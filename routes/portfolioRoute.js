@@ -5,6 +5,8 @@ const PortfolioDetail = require("../models/PortfolioDetail");
 const { default: mongoose } = require("mongoose");
 const Currency = require("../models/Currency");
 const Gold = require("../models/Gold");
+const Stock = require("../models/Stock");
+
 const router = express.Router();
 
 router.use(verifyJWT);
