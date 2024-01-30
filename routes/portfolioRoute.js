@@ -521,6 +521,9 @@ router.get("/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays", a
           : null,
     }));
 
+    const formattedPurchaseDate = asset.purchaseDate ? asset.purchaseDate.toISOString().split("T")[0] : null;
+
+
     res.status(200).json({
       status: "success",
       message: "Asset detayları başarıyla getirildi",
@@ -528,7 +531,9 @@ router.get("/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays", a
         name: asset.name,
         quantity: parseFloat(asset.quantity), // Virgülden sonra 2 basamak göster
         lastPrice: parseFloat(asset.lastPrice.toFixed(2)),
-        purchaseDate: asset.purchaseDate.toISOString().split("T")[0],
+        purchaseDate: formattedPurchaseDate,
+        purchasePrice: parseFloat(asset.purchasePrice.toFixed(2)),
+        totalAssetValue: parseFloat(asset.totalAssetValue.toFixed(2)),
       },
       historicalData: formattedHistoricalData,
     });
