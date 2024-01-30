@@ -72,6 +72,7 @@ router.get("/getCurrencyDetail/:name/:numberOfDays", async (req, res) => {
       message: "Döviz detayı başarıyla getirildi",
       name: currencyName.name,
       lastPrice: parseFloat(currencyName.lastPrice.replace(",", ".")),
+      description: currencyName.desc,
       data: formattedData,
     });
   } catch (error) {
