@@ -527,8 +527,11 @@ router.get("/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays", a
     res.status(200).json({
       status: "success",
       message: "Asset detayları başarıyla getirildi",
+      portfolioId: portfolio._id,
       assetDetails: {
         name: asset.name,
+        assetId: asset._id,
+        type: asset.type,
         quantity: parseFloat(asset.quantity), // Virgülden sonra 2 basamak göster
         lastPrice: parseFloat(asset.lastPrice.toFixed(2)),
         purchaseDate: formattedPurchaseDate,
