@@ -125,7 +125,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         const lastPrice = parseFloat(latestData.lastPrice.replace(",", ".")).toFixed(2);
         const totalAssetValue = asset.quantity * lastPrice;
         const profitPercentage =
-          ((lastPrice - asset.purchasePrice) / lastPrice) * 100;
+          ((lastPrice - asset.purchasePrice) / asset.purchasePrice) * 100;
 
         return {
           ...asset.toObject(),
