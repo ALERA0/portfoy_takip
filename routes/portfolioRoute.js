@@ -122,7 +122,9 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       portfolio.portfolioDetails.map(async (asset) => {
         const latestData = await getLatestPrice(asset.type, asset.name);
         const purchasePrice = parseFloat(asset.purchasePrice).toFixed(2);
-        const lastPrice = parseFloat(latestData.lastPrice.replace(",", ".")).toFixed(2);
+        const lastPrice = parseFloat(
+          latestData.lastPrice.replace(",", ".")
+        ).toFixed(2);
         const totalAssetValue = asset.quantity * lastPrice;
         const profitPercentage =
           ((lastPrice - asset.purchasePrice) / asset.purchasePrice) * 100;
@@ -215,8 +217,17 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       }
     });
 
-    const order = ["Stock", "Currency", "Gold", "Crypto", "Fund", "TurkishLira"];
-formattedDistribution.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
+    const order = [
+      "Stock",
+      "Currency",
+      "Gold",
+      "Crypto",
+      "Fund",
+      "TurkishLira",
+    ];
+    formattedDistribution.sort(
+      (a, b) => order.indexOf(a.type) - order.indexOf(b.type)
+    );
 
     const adjustedDistribution = formattedDistribution.map((item) => ({
       type: item.type,
@@ -228,9 +239,9 @@ formattedDistribution.sort((a, b) => order.indexOf(a.type) - order.indexOf(b.typ
     const updatedPortfolio = await Portfolio.findByIdAndUpdate(
       portfolioId,
       {
-        totalAssetValue: totalValue,
-        totalProfitPercentage: formattedFitStatus,
-        totalPurchaseValue: totalPurchaseValue,
+        totalAssetValue: parseFloat(totalValue).toFixed(2),
+        totalProfitPercentage: parseFloat(formattedFitStatus.toFixed(2)),
+        totalPurchaseValue: parseFloat(totalPurchaseValue).toFixed(2),
         portfolioDetails: updatedPortfolioDetails,
       },
       { new: true }
@@ -284,7 +295,7 @@ router.get("/getAssetPercentages/:portfolioId/:assetType", async (req, res) => {
     const assetPercentages = filteredAssets.map((asset) => ({
       name: asset.name,
       quantity: asset.quantity,
-      progressBar: ((asset.totalAssetValue / totalPortfolioValue)),
+      progressBar: asset.totalAssetValue / totalPortfolioValue,
       percentage: parseFloat(
         ((asset.totalAssetValue / totalPortfolioValue) * 100).toFixed(2)
       ),
@@ -399,7 +410,6 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     // Büyük harfe çevir
     const upperCaseName = name.toUpperCase();
 
-    
     const newPortfolioDetail = new PortfolioDetail({
       type,
       name: upperCaseName,
@@ -421,7 +431,6 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
 
 router.delete("/removeAsset/:portfolioId/:assetId", async (req, res) => {
   try {
@@ -458,13 +467,108 @@ router.delete("/removeAsset/:portfolioId/:assetId", async (req, res) => {
   }
 });
 
+router.get(
+  "/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays",
+  async (req, res) => {
+    try {
+      const { portfolioId, assetId, type, name, numberOfDays } = req.params;
+      const userId = req.user._id;
 
-router.get("/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays", async (req, res) => {
+      // Belirtilen portföy ve varlık bilgilerini kontrol et
+      const portfolio = await Portfolio.findOne({
+        _id: portfolioId,
+        createdBy: userId,
+      });
+
+      if (!portfolio) {
+        return res
+          .status(404)
+          .json({ status: "error", message: "Portfolio not found." });
+      }
+
+      // Belirtilen varlık (asset) bilgisini bul
+      const asset = portfolio.portfolioDetails.find(
+        (item) => item._id.toString() === assetId
+      );
+
+      if (!asset) {
+        return res.status(404).json({
+          status: "error",
+          message: "Asset not found in the portfolio.",
+        });
+      }
+
+      // Belirtilen model (type) üzerinden tarihsel verileri al
+      let historicalData = [];
+      switch (type) {
+        case "Stock":
+          historicalData = await Stock.find({ name: new RegExp(name, "i") })
+            .sort({ addedDate: -1 })
+            .limit(parseInt(numberOfDays));
+          break;
+        case "Currency":
+          historicalData = await Currency.find({ name: new RegExp(name, "i") })
+            .sort({ addedDate: -1 })
+            .limit(parseInt(numberOfDays));
+          break;
+        case "Gold":
+          historicalData = await Gold.find({ name: new RegExp(name, "i") })
+            .sort({ addedDate: -1 })
+            .limit(parseInt(numberOfDays));
+          break;
+        // Diğer modeller için gerekli case'leri ekleyebilirsiniz.
+        default:
+          return res
+            .status(400)
+            .json({ status: "error", message: "Invalid asset type." });
+      }
+
+      // Verileri istenen formata çevir
+      const formattedHistoricalData = historicalData.map(
+        (item, index, array) => ({
+          value: parseFloat(item.lastPrice.replace(",", ".")),
+          date: item.addedDate.toISOString().split("T")[0],
+          label:
+            index === 0 || index === array.length - 1
+              ? item.addedDate.toISOString().split("T")[0]
+              : null,
+        })
+      );
+
+      const formattedPurchaseDate = asset.purchaseDate
+        ? asset.purchaseDate.toISOString().split("T")[0]
+        : null;
+
+      res.status(200).json({
+        status: "success",
+        message: "Asset detayları başarıyla getirildi",
+        portfolioId: portfolio._id,
+        assetDetails: {
+          name: asset.name,
+          assetId: asset._id,
+          type: asset.type,
+          quantity: parseFloat(asset.quantity).toFixed(2), // Virgülden sonra 2 basamak göster
+          lastPrice: parseFloat(asset.lastPrice.toFixed(2)),
+          purchaseDate: formattedPurchaseDate,
+          purchasePrice: parseFloat(asset.purchasePrice).toFixed(2),
+          totalAssetValue: parseFloat(asset.totalAssetValue).toFixed(2),
+        },
+        historicalData: formattedHistoricalData,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ status: "error", message: error.message });
+    }
+  }
+);
+
+router.put("/updateAsset/:portfolioId/:assetId", async (req, res) => {
   try {
-    const { portfolioId, assetId, type, name, numberOfDays } = req.params;
+    const { portfolioId, assetId } = req.params;
+    const { quantity, purchasePrice, purchaseDate } = req.body;
     const userId = req.user._id;
 
-    // Belirtilen portföy ve varlık bilgilerini kontrol et
+    // Portföyü bul
     const portfolio = await Portfolio.findOne({
       _id: portfolioId,
       createdBy: userId,
@@ -476,75 +580,35 @@ router.get("/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays", a
         .json({ status: "error", message: "Portfolio not found." });
     }
 
-    // Belirtilen varlık (asset) bilgisini bul
-    const asset = portfolio.portfolioDetails.find((item) => item._id.toString() === assetId);
+    const assetIndex = portfolio.portfolioDetails.findIndex(
+      (item) => item._id.toString() === assetId
+    );
 
-    if (!asset) {
+    if (assetIndex === -1) {
       return res
         .status(404)
-        .json({ status: "error", message: "Asset not found in the portfolio." });
+        .json({
+          status: "error",
+          message: "Asset not found in the portfolio.",
+        });
     }
 
-    // Belirtilen model (type) üzerinden tarihsel verileri al
-    let historicalData = [];
-    switch (type) {
-      case "Stock":
-        historicalData = await Stock.find({ name: new RegExp(name, "i") })
-          .sort({ addedDate: -1 })
-          .limit(parseInt(numberOfDays));
-        break;
-      case "Currency":
-        historicalData = await Currency.find({ name: new RegExp(name, "i") })
-          .sort({ addedDate: -1 })
-          .limit(parseInt(numberOfDays));
-        break;
-      case "Gold":
-        historicalData = await Gold.find({ name: new RegExp(name, "i") })
-          .sort({ addedDate: -1 })
-          .limit(parseInt(numberOfDays));
-        break;
-      // Diğer modeller için gerekli case'leri ekleyebilirsiniz.
-      default:
-        return res
-          .status(400)
-          .json({ status: "error", message: "Invalid asset type." });
-    }
+    // Update the asset details
+    portfolio.portfolioDetails[assetIndex].quantity = quantity;
+    portfolio.portfolioDetails[assetIndex].purchasePrice = purchasePrice;
+    portfolio.portfolioDetails[assetIndex].purchaseDate = purchaseDate;
 
-    // Verileri istenen formata çevir
-    const formattedHistoricalData = historicalData.map((item, index, array) => ({
-      value: parseFloat(item.lastPrice.replace(",", ".")),
-      date: item.addedDate.toISOString().split("T")[0],
-      label:
-        index === 0 || index === array.length - 1
-          ? item.addedDate.toISOString().split("T")[0]
-          : null,
-    }));
-
-    const formattedPurchaseDate = asset.purchaseDate ? asset.purchaseDate.toISOString().split("T")[0] : null;
-
+    // Save the updated portfolio
+    const updatedPortfolio = await portfolio.save();
 
     res.status(200).json({
       status: "success",
-      message: "Asset detayları başarıyla getirildi",
-      portfolioId: portfolio._id,
-      assetDetails: {
-        name: asset.name,
-        assetId: asset._id,
-        type: asset.type,
-        quantity: parseFloat(asset.quantity).toFixed(2), // Virgülden sonra 2 basamak göster
-        lastPrice: parseFloat(asset.lastPrice.toFixed(2)),
-        purchaseDate: formattedPurchaseDate,
-        purchasePrice: parseFloat(asset.purchasePrice).toFixed(2),
-        totalAssetValue: parseFloat(asset.totalAssetValue).toFixed(2),
-      },
-      historicalData: formattedHistoricalData,
+      message: "Asset details successfully updated.",
     });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
 
 
 module.exports = router;
