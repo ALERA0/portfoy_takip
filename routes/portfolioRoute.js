@@ -22,11 +22,11 @@ const allowedTypes = [
 
 const colorCodes = {
   Stock: "#BCFE00",
-  Gold: "#FF7A00",
   Currency: "#00EFFE",
-  TurkishLira: "#3401FF",
+  Gold: "#FF7A00",
   Crypto: "#DB00FF",
   Fund: "#FF007A",
+  TurkishLira: "#3401FF",
 };
 
 async function getLatestPrice(type, name) {
@@ -121,8 +121,8 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     const updatedPortfolioDetails = await Promise.all(
       portfolio.portfolioDetails.map(async (asset) => {
         const latestData = await getLatestPrice(asset.type, asset.name);
-
-        const lastPrice = parseFloat(latestData.lastPrice.replace(",", "."));
+        const purchasePrice = parseFloat(asset.purchasePrice).toFixed(2);
+        const lastPrice = parseFloat(latestData.lastPrice.replace(",", ".")).toFixed(2);
         const totalAssetValue = asset.quantity * lastPrice;
         const profitPercentage =
           ((lastPrice - asset.purchasePrice) / lastPrice) * 100;
@@ -130,8 +130,9 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         return {
           ...asset.toObject(),
           lastPrice,
+          purchasePrice,
           profitPercentage: parseFloat(profitPercentage.toFixed(2)),
-          totalAssetValue,
+          totalAssetValue: parseFloat(totalAssetValue).toFixed(2),
         };
       })
     );
@@ -398,15 +399,13 @@ router.post("/addAsset/:portfolioId", async (req, res) => {
     // Büyük harfe çevir
     const upperCaseName = name.toUpperCase();
 
-    const formattedPurchaseDate = purchaseDate
-      ? new Date(purchaseDate.replace(/-/g, "/"))
-      : new Date();
+    
     const newPortfolioDetail = new PortfolioDetail({
       type,
       name: upperCaseName,
       quantity,
       purchasePrice,
-      purchaseDate: formattedPurchaseDate,
+      purchaseDate,
     });
 
     portfolio.portfolioDetails.push(newPortfolioDetail);
@@ -532,11 +531,11 @@ router.get("/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays", a
         name: asset.name,
         assetId: asset._id,
         type: asset.type,
-        quantity: parseFloat(asset.quantity), // Virgülden sonra 2 basamak göster
+        quantity: parseFloat(asset.quantity).toFixed(2), // Virgülden sonra 2 basamak göster
         lastPrice: parseFloat(asset.lastPrice.toFixed(2)),
         purchaseDate: formattedPurchaseDate,
-        purchasePrice: parseFloat(asset.purchasePrice.toFixed(2)),
-        totalAssetValue: parseFloat(asset.totalAssetValue.toFixed(2)),
+        purchasePrice: parseFloat(asset.purchasePrice).toFixed(2),
+        totalAssetValue: parseFloat(asset.totalAssetValue).toFixed(2),
       },
       historicalData: formattedHistoricalData,
     });
