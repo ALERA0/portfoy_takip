@@ -190,6 +190,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
 
     updatedPortfolioDetails.forEach((asset) => {
       const assetValue = asset.quantity * asset.lastPrice;
+
       const percentage = (assetValue / totalValue) * 100;
 
       // Yüzde değerini doğrudan eklemeye çalışın
@@ -203,7 +204,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     const formattedDistribution = Object.entries(distribution).map(
       ([type, percentage]) => ({
         type,
-        percentage: parseFloat(percentage.toFixed(2)),
+        percentage: parseFloat(percentage.toFixed(4)),
       })
     );
 
@@ -231,7 +232,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
 
     const adjustedDistribution = formattedDistribution.map((item) => ({
       type: item.type,
-      percentage: parseFloat(item.percentage.toFixed(2)),
+      percentage: parseFloat(item.percentage).toFixed(3),
       color: colorCodes[item.type] || "#000000",
     }));
 

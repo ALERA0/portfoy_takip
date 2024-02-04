@@ -49,18 +49,17 @@ router.get("/getAllGold", async (req, res) => {
   }
 });
 
-router.get("/getGoldDetail/:name/:numberOfDays", async (req, res) => {
+router.get("/getGoldDetail/:numberOfDays", async (req, res) => {
   try {
-    const { name, numberOfDays } = req.params;
+    const { numberOfDays } = req.params;
+    const { name } = req.body;
 
-    
-
-
-    const goldName = await Gold.findOne({ name: new RegExp(name, "i") });
-    console.log(goldName)
-    const data = await Gold.find({ name: new RegExp(name, "i") })
+    const goldName = await Gold.findOne({ name: name });
+    console.log(goldName);
+    const data = await Gold.find({ name: name })
       .sort({ addedDate: -1 })
       .limit(parseInt(numberOfDays));
+
 
     const formattedData = data.map((item, index, array) => ({
       value: parseFloat(item.lastPrice),
@@ -74,8 +73,8 @@ router.get("/getGoldDetail/:name/:numberOfDays", async (req, res) => {
     const responseData = {
       status: "success",
       message: "Altın / Gümüş detayı başarıyla getirildi",
-      name:goldName.name,
-      lastPrice:parseFloat(goldName.lastPrice),
+      name: goldName.name,
+      lastPrice: parseFloat(goldName.lastPrice),
       data: formattedData,
     };
     res.status(200).json(responseData);
