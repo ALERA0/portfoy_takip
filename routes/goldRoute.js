@@ -1,21 +1,19 @@
-const express = require('express');
-const saveGoldDataToDb = require('../scrapeSave/saveGoldDataToDb');
-const Gold = require('../models/Gold');
-const verifyJWT = require('../middleware/verifyJWT.js');
+const express = require("express");
+const saveGoldDataToDb = require("../scrapeSave/saveGoldDataToDb");
+const Gold = require("../models/Gold");
+const verifyJWT = require("../middleware/verifyJWT.js");
 const router = express.Router();
 const redisClient = require("../shared/redis.js")();
 
-
 router.use(verifyJWT);
 
-
-router.get('/add-gold', async (req, res) => {
+router.get("/add-gold", async (req, res) => {
   try {
     await saveGoldDataToDb();
-    res.send('Gold data updated successfully');
+    res.send("Gold data updated successfully");
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error updating gold data');
+    res.status(500).send("Error updating gold data");
   }
 });
 
@@ -36,6 +34,7 @@ router.get("/getAllGold", async (req, res) => {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0); // Bugünün başlangıcı
     const data = await Gold.find({ addedDate: { $gte: today } });
+    console.log(data[0]);
 
     // Veriyi Redis'e kaydet
     await redisClient.set("golds", JSON.stringify(data), "EX", 60 * 60); // 1 saat TTL
@@ -54,27 +53,29 @@ router.get("/getGoldDetail/:name/:numberOfDays", async (req, res) => {
   try {
     const { name, numberOfDays } = req.params;
 
-    const nameEncoded = encodeURIComponent(name);
+    
 
-    console.log(nameEncoded);
 
-    const goldName = await Gold.findOne({ name: new RegExp(nameEncoded, "i") });
-
-    const data = await Gold.find({ name: new RegExp(nameEncoded, "i") })
+    const goldName = await Gold.findOne({ name: new RegExp(name, "i") });
+    console.log(goldName)
+    const data = await Gold.find({ name: new RegExp(name, "i") })
       .sort({ addedDate: -1 })
       .limit(parseInt(numberOfDays));
 
-      console.log(data,"data")
-
     const formattedData = data.map((item, index, array) => ({
-      value: parseFloat(item.lastPrice.replace(",", ".")),
+      value: parseFloat(item.lastPrice),
       date: item.addedDate.toISOString().split("T")[0],
-      label: index === 0 || index === array.length - 1 ? item.addedDate.toISOString().split("T")[0] : null,
+      label:
+        index === 0 || index === array.length - 1
+          ? item.addedDate.toISOString().split("T")[0]
+          : null,
     }));
 
     const responseData = {
       status: "success",
       message: "Altın / Gümüş detayı başarıyla getirildi",
+      name:goldName.name,
+      lastPrice:parseFloat(goldName.lastPrice),
       data: formattedData,
     };
     res.status(200).json(responseData);
@@ -83,18 +84,15 @@ router.get("/getGoldDetail/:name/:numberOfDays", async (req, res) => {
   }
 });
 
-
 router.get("/getLastGoldDetail/:name/:numberOfDays", async (req, res) => {
   try {
-    const { name,numberOfDays } = req.params;
+    const { name, numberOfDays } = req.params;
 
-    
     nameEncoded = encodeURIComponent(name);
 
-
     const data = await Gold.find({ name: new RegExp(nameEncoded, "i") })
-    .sort({ addedDate: -1 })
-    .limit(parseInt(numberOfDays));
+      .sort({ addedDate: -1 })
+      .limit(parseInt(numberOfDays));
 
     const formattedData = data.map((item, index, array) => ({
       value: parseFloat(item.lastPrice.replace(",", ".")),
@@ -114,10 +112,5 @@ router.get("/getLastGoldDetail/:name/:numberOfDays", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
-
-
-
-
 
 module.exports = router;

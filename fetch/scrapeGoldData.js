@@ -9,8 +9,12 @@ const scrapeGoldData = async () => {
     const goldData = [];
 
     $(".tBody ul").each((index, element) => {
-      const name = $(element).find("li.cell010 h3 a").text().trim() ||$(element).find("li.cell010 b").text().trim() ;
-      const lastPrice = $(element).find("li.cell009").first().text().trim();
+      const name = $(element).find("li.cell010 h3 a").text().trim() || $(element).find("li.cell010 b").text().trim();
+      const lastPriceString = $(element).find("li.cell009").first().text().trim();
+
+      // Replace dot with empty string and replace comma with comma
+      const lastPrice = parseFloat(lastPriceString.replace(".", "").replace(",", "."));
+
       const changePercent = $(element).find("li.cell009").eq(2).text().trim();
 
       goldData.push({
