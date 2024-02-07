@@ -180,8 +180,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         .toFixed(2)
     );
 
-    const fitStatus =
-      ((totalValue - totalPurchaseValue) / totalPurchaseValue) * 100;
+    const fitStatus = totalValue > 0 ? ((totalValue - totalPurchaseValue) / totalPurchaseValue) * 100 : 0;
 
     const formattedFitStatus = parseFloat(fitStatus.toFixed(4));
 
@@ -235,6 +234,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       percentage: parseFloat(item.percentage).toFixed(3),
       color: colorCodes[item.type] || "#000000",
     }));
+
 
     // Güncellenmiş portföy detayları ile birlikte portföy bilgisini döndür
     const updatedPortfolio = await Portfolio.findByIdAndUpdate(
