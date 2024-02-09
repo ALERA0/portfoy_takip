@@ -58,7 +58,7 @@ router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
       .sort({ addedDate: -1 })
       .limit(parseInt(numberOfDays));
 
-      const stockName = await Stock.findOne({ name: new RegExp(name, "i") }).sort({ addedDate: -1 });
+    const stockInfo = await Stock.findOne({ name: new RegExp(name, "i") }).sort({ addedDate: -1 });
 
     // Verileri istenen formata çevir
     const formattedData = data.map((item, index, array) => ({
@@ -67,19 +67,23 @@ router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
       label: index === 0 || index === array.length - 1 ? item.addedDate.toISOString().split("T")[0] : null,
     }));
 
+    // Name ve Desc alanlarını ayarlayın
+    const nameArray = stockInfo ? stockInfo.name.split(' ') : [];
+    const namePart1 = nameArray.length > 0 ? nameArray[0] : '';
+    const namePart2 = nameArray.length > 1 ? nameArray.slice(1).join(' ') : '';
+
     res.status(200).json({
       status: "success",
       message: "Hisse detayı başarıyla getirildi",
-      name: stockName.name,
-      lastPrice: parseFloat(stockName.lastPrice.replace(",", ".")),
+      name: namePart1,
+      description: namePart2,
+      lastPrice: parseFloat(stockInfo.lastPrice.replace(",", ".")),
       data: formattedData,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
-
 
 
 router.get("/getLastStockDetail/:name", async (req, res) => {

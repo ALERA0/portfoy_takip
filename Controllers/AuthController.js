@@ -2,6 +2,8 @@ const User = require("../models/User.js");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
+const Portfolio = require("../models/Portfolio");
+
 
 // @desc Login
 // @route POST /auth
@@ -15,6 +17,12 @@ const login = asyncHandler(async (req, res) => {
   }
 
   const foundUser = await User.findOne({ email }).exec();
+
+  const userId = foundUser._id.toHexString();
+
+  const portfolios = await Portfolio.find({createdBy: userId}); 
+
+  const defaultPortfolioId = portfolios[0]._id.toHexString();
 
   if (!foundUser || !foundUser.active) {
     return res.status(401).json({ status: "error", message: "Username veya şifre yanlış" });
@@ -58,7 +66,7 @@ if (accessExpiration && accessExpiration < currentTime) {
   });
 
   // Send accessToken containing username and roles
-  res.json({ status: "success", accessToken });
+  res.json({ status: "success", accessToken,defaultPortfolioId });
 });
 
 // @desc Refresh
