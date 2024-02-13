@@ -28,14 +28,14 @@ const createNewUser = asyncHandler(async (req, res) => {
 
   // Confirm data
   if (!username || !password || !email) {
-    return res.status(400).json({ message: "Bütün alanlar doldurulmalıdır." });
+    return res.status(400).json({ status :"error",message: "Bütün alanlar doldurulmalıdır." });
   }
 
   // Check for duplicate username
   const duplicate = await User.findOne({ email }).lean().exec();
 
   if (duplicate) {
-    return res.status(409).json({ message: "Aynı maille bir kayıt zaten var" });
+    return res.status(409).json({status :"error", message: "Aynı maille bir kayıt zaten var" });
   }
 
   // Hash password

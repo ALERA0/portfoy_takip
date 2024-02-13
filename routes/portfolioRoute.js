@@ -92,6 +92,14 @@ router.put("/updatePortfolio/:portfolioId", async (req, res) => {
 router.delete("/deletePortfolio/:portfolioId", async (req, res) => {
   try {
     const { portfolioId } = req.params;
+    const userId = req.user._id;
+    const portfolios = await Portfolio.find({ createdBy: userId });
+    if (portfolios.length === 1) {
+      return res.status(400).json({
+        status: "error",
+        message: "Hesabınızda en az bir portföy bulunmalıdır.",
+      });
+    }
     await Portfolio.findByIdAndDelete(portfolioId);
     res.status(200).json({
       status: "success",
@@ -180,7 +188,10 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         .toFixed(2)
     );
 
-    const fitStatus = totalValue > 0 ? ((totalValue - totalPurchaseValue) / totalPurchaseValue) * 100 : 0;
+    const fitStatus =
+      totalValue > 0
+        ? ((totalValue - totalPurchaseValue) / totalPurchaseValue) * 100
+        : 0;
 
     const formattedFitStatus = parseFloat(fitStatus.toFixed(4));
 
@@ -234,7 +245,6 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       percentage: parseFloat(item.percentage).toFixed(3),
       color: colorCodes[item.type] || "#000000",
     }));
-
 
     // Güncellenmiş portföy detayları ile birlikte portföy bilgisini döndür
     const updatedPortfolio = await Portfolio.findByIdAndUpdate(
@@ -540,15 +550,31 @@ router.get(
         ? asset.purchaseDate.toISOString().split("T")[0]
         : null;
 
+      let formattedNames;
+      let namefirst;
+      let description;
+
+      if (type === "Stock") {
+        formattedNames = asset.name.split(" ");
+        namefirst = formattedNames.length > 0 ? formattedNames[0] : "";
+        description =
+          formattedNames.length > 1 ? formattedNames.slice(1).join(" ") : "";
+      } else if (type === "Currency") {
+        const currency = await Currency.findOne({ name: asset.name });
+        description = currency.desc;
+      }
+
       res.status(200).json({
         status: "success",
         message: "Asset detayları başarıyla getirildi",
         portfolioId: portfolio._id,
         assetDetails: {
-          name: asset.name,
+          fullName: asset.name,
+          name: namefirst ? namefirst : "",
+          description: description ? description : "",
           assetId: asset._id,
           type: asset.type,
-          quantity: parseFloat(asset.quantity).toFixed(2), // Virgülden sonra 2 basamak göster
+          quantity: parseFloat(asset.quantity).toFixed(2),
           lastPrice: parseFloat(asset.lastPrice.toFixed(2)),
           purchaseDate: formattedPurchaseDate,
           purchasePrice: parseFloat(asset.purchasePrice).toFixed(2),
@@ -586,12 +612,10 @@ router.put("/updateAsset/:portfolioId/:assetId", async (req, res) => {
     );
 
     if (assetIndex === -1) {
-      return res
-        .status(404)
-        .json({
-          status: "error",
-          message: "Asset not found in the portfolio.",
-        });
+      return res.status(404).json({
+        status: "error",
+        message: "Asset not found in the portfolio.",
+      });
     }
 
     // Update the asset details
@@ -610,6 +634,5 @@ router.put("/updateAsset/:portfolioId/:assetId", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
 
 module.exports = router;

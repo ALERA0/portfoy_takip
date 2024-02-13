@@ -75,6 +75,7 @@ router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
     res.status(200).json({
       status: "success",
       message: "Hisse detayı başarıyla getirildi",
+      fullName: stockInfo.name,
       name: namePart1,
       description: namePart2,
       lastPrice: parseFloat(stockInfo.lastPrice.replace(",", ".")),
