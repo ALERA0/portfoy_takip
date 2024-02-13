@@ -561,6 +561,7 @@ router.get(
           formattedNames.length > 1 ? formattedNames.slice(1).join(" ") : "";
       } else if (type === "Currency") {
         const currency = await Currency.findOne({ name: asset.name });
+        namefirst = currency.name;
         description = currency.desc;
       }
 
