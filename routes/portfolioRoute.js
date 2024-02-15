@@ -134,15 +134,19 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
           latestData.lastPrice.replace(",", ".")
         ).toFixed(2);
         const totalAssetValue = asset.quantity * lastPrice;
+        
         const profitPercentage =
           ((lastPrice - asset.purchasePrice) / asset.purchasePrice) * 100;
-
+          
+        const profitValue = totalAssetValue - (asset.quantity * asset.purchasePrice);
+    
         return {
           ...asset.toObject(),
           lastPrice,
           purchasePrice,
           profitPercentage: parseFloat(profitPercentage.toFixed(2)),
           totalAssetValue: parseFloat(totalAssetValue).toFixed(2),
+          profitValue: parseFloat(profitValue).toFixed(2), // Yeni eklenen satır
         };
       })
     );
@@ -253,6 +257,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         totalAssetValue: parseFloat(totalValue).toFixed(2),
         totalProfitPercentage: parseFloat(formattedFitStatus.toFixed(2)),
         totalPurchaseValue: parseFloat(totalPurchaseValue).toFixed(2),
+        profitValue: parseFloat(totalValue - totalPurchaseValue).toFixed(2),
         portfolioDetails: updatedPortfolioDetails,
       },
       { new: true }

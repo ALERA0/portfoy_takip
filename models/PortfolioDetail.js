@@ -28,6 +28,10 @@ const portfolioDetailSchema = new mongoose.Schema({
     type: Number,
     required: false,
   },
+  profitValue: {
+    type: Number,
+    required: false,
+  },
   totalAssetValue: {
     type: Number,
     required: false,

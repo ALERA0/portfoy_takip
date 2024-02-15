@@ -24,7 +24,10 @@ const portfolioSchema = new mongoose.Schema({
     type: Number,
     required: false,
   },
-
+  profitValue: {
+    type: Number,
+    required: false,
+  },
 });
 
 portfolioSchema.pre("save", async function (next) {
