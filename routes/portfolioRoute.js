@@ -139,14 +139,15 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
           ((lastPrice - asset.purchasePrice) / asset.purchasePrice) * 100;
           
         const profitValue = totalAssetValue - (asset.quantity * asset.purchasePrice);
-    
+        const totalPurchasePrice = asset.quantity * asset.purchasePrice;
         return {
           ...asset.toObject(),
           lastPrice,
           purchasePrice,
           profitPercentage: parseFloat(profitPercentage.toFixed(2)),
           totalAssetValue: parseFloat(totalAssetValue).toFixed(2),
-          profitValue: parseFloat(profitValue).toFixed(2), // Yeni eklenen satır
+          profitValue: parseFloat(profitValue).toFixed(2),
+          totalPurchasePrice: parseFloat(totalPurchasePrice).toFixed(2),
         };
       })
     );
