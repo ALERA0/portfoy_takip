@@ -484,7 +484,7 @@ router.delete("/removeAsset/:portfolioId/:assetId", async (req, res) => {
   }
 });
 
-router.get(
+router.post(
   "/getAssetDetails",
   async (req, res) => {
     try {
