@@ -4,6 +4,7 @@ const saveStockDataToDb = require("../scrapeSave/saveStockDataToDb");
 const Stock = require("../models/Stock");
 const verifyJWT = require("../middleware/verifyJWT.js");
 const redisClient = require("../shared/redis.js")();
+const cron = require('node-cron');
 
 router.use(verifyJWT);
 
