@@ -485,10 +485,10 @@ router.delete("/removeAsset/:portfolioId/:assetId", async (req, res) => {
 });
 
 router.get(
-  "/getAssetDetails/:portfolioId/:assetId/:type/:name/:numberOfDays",
+  "/getAssetDetails",
   async (req, res) => {
     try {
-      const { portfolioId, assetId, type, name, numberOfDays } = req.params;
+      const { portfolioId, assetId, type, name, numberOfDays } = req.body;
       const userId = req.user._id;
 
       // Belirtilen portföy ve varlık bilgilerini kontrol et

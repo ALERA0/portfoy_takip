@@ -49,15 +49,14 @@ router.get("/getAllGold", async (req, res) => {
   }
 });
 
-router.post("/getGoldDetail/:numberOfDays", async (req, res) => {
+router.post("/getGoldDetail", async (req, res) => {
   try {
-    const { numberOfDays } = req.params;
-    const { name } = req.body;
+    const { name,day } = req.body;
 
     const goldName = await Gold.findOne({ name: name });
     const data = await Gold.find({ name: name })
       .sort({ addedDate: -1 })
-      .limit(parseInt(numberOfDays));
+      .limit(parseInt(day));
 
 
     const formattedData = data.map((item, index, array) => ({
