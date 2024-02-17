@@ -4,19 +4,12 @@ const saveStockDataToDb = require("../scrapeSave/saveStockDataToDb");
 const Stock = require("../models/Stock");
 const verifyJWT = require("../middleware/verifyJWT.js");
 const redisClient = require("../shared/redis.js")();
-const cron = require('node-cron');
+
 
 router.use(verifyJWT);
 
 
-cron.schedule('15 2 * * *', async () => {
-  try {
-    await saveStockDataToDb();
-    console.log('Stock data updated successfully at', new Date());
-  } catch (error) {
-    console.error('Error updating stock data:', error.message);
-  }
-});
+
 
 router.get("/add-stocks", async (req, res) => {
   try {
