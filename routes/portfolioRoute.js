@@ -264,6 +264,16 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
       { new: true }
     );
 
+    const truncatedPortfolioDetails = formattedPortfolioDetails.map((group) => {
+      if (group.type === "Stock") {
+        group.assets = group.assets.map((asset) => {
+          const spaceIndex = asset.name.indexOf(' ');
+          asset.name = spaceIndex !== -1 ? asset.name.substring(0, spaceIndex) : asset.name;
+          return asset;
+        });
+      }
+      return group;
+    });
     res.status(200).json({
       status: "success",
       message: "Portfolio detayları başarıyla getirildi",
@@ -271,7 +281,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
         ...updatedPortfolio.toObject(),
         // totalValue,
         // fitStatus: formattedFitStatus,
-        portfolioDetails: formattedPortfolioDetails, // Gruplanmış detayları ekleyin
+        portfolioDetails: truncatedPortfolioDetails, // Gruplanmış detayları ekleyin
       },
       distribution: adjustedDistribution,
     });
