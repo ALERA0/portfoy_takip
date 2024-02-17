@@ -72,6 +72,7 @@ router.post("/getGoldDetail", async (req, res) => {
       status: "success",
       message: "Altın / Gümüş detayı başarıyla getirildi",
       name: goldName.name,
+      fullName: goldName.name,
       lastPrice: parseFloat(goldName.lastPrice),
       data: formattedData,
     };
