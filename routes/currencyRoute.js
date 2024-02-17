@@ -80,26 +80,22 @@ router.get("/getCurrencyDetail/:name/:numberOfDays", async (req, res) => {
   }
 });
 
-router.get("/getLastCurrencyDetail/:name", async (req, res) => {
+
+
+router.post("/searchCurrency/:searchParam", async (req, res) => {
   try {
-    const { name } = req.params;
-
-    const latestCurrencyDetail = await Currency.findOne({
-      name: new RegExp(name, "i"),
-    })
-      .sort({ addedDate: -1 })
-      .limit(1);
-
-    if (!latestCurrencyDetail) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "Döviz detayı bulunamadı." });
-    }
-
+    let { searchParam } = req.params;
+    searchParam = searchParam.toUpperCase();
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const data = await Currency.find({
+      name: new RegExp(searchParam, "i"),
+      addedDate: { $gte: today },
+    });
     res.status(200).json({
       status: "success",
-      message: "Döviz detayı başarıyla getirildi",
-      data: latestCurrencyDetail,
+      message: "Dövizler başarıyla getirildi",
+      data,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });

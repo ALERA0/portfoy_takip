@@ -82,29 +82,20 @@ router.post("/getGoldDetail", async (req, res) => {
   }
 });
 
-router.get("/getLastGoldDetail/:name/:numberOfDays", async (req, res) => {
+router.post("/searchGold", async (req, res) => {
   try {
-    const { name, numberOfDays } = req.params;
-
-    nameEncoded = encodeURIComponent(name);
-
-    const data = await Gold.find({ name: new RegExp(nameEncoded, "i") })
-      .sort({ addedDate: -1 })
-      .limit(parseInt(numberOfDays));
-
-    const formattedData = data.map((item, index, array) => ({
-      value: parseFloat(item.lastPrice.replace(",", ".")),
-      date: item.addedDate.toISOString().split("T")[0],
-      label:
-        index === 0 || index === array.length - 1
-          ? item.addedDate.toISOString().split("T")[0]
-          : null,
-    }));
-
+    let { searchParam } = req.body;
+    searchParam = searchParam.toUpperCase();
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const data = await Gold.find({
+      name: new RegExp(searchParam, "i"),
+      addedDate: { $gte: today },
+    });
     res.status(200).json({
       status: "success",
-      message: "Altın / Gümüş detayı başarıyla getirildi",
-      data: formattedData,
+      message: "Altın / Gümüş verisi başarıyla getirildi",
+      data,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });

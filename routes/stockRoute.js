@@ -115,7 +115,8 @@ router.get("/getLastStockDetail/:name", async (req, res) => {
 
 router.post("/searchStock/:searchParam", async (req, res) => {
   try {
-    const { searchParam } = req.params;
+    let { searchParam } = req.params;
+    searchParam = searchParam.toUpperCase();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     const data = await Stock.find({
