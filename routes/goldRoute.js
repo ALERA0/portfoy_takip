@@ -4,8 +4,24 @@ const Gold = require("../models/Gold");
 const verifyJWT = require("../middleware/verifyJWT.js");
 const router = express.Router();
 const redisClient = require("../shared/redis.js")();
+const cron = require("node-cron");
 
 router.use(verifyJWT);
+
+cron.schedule("1 0 * * *", async () => {
+  try {
+    console.log("Cron Job Gold started at", new Date());
+    await saveGoldDataToDb();
+    const cachedStocks = await redisClient.get("golds");
+    if (cachedStocks) {
+      await redisClient.del("golds");
+      console.log("Redis'teki altın verileri silindi");
+    }
+    console.log("Gold data updated successfully at", new Date());
+  } catch (error) {
+    console.error("Error updating gold data:", error.message);
+  }
+});
 
 router.get("/add-gold", async (req, res) => {
   try {
@@ -37,7 +53,7 @@ router.get("/getAllGold", async (req, res) => {
     console.log(data[0]);
 
     // Veriyi Redis'e kaydet
-    await redisClient.set("golds", JSON.stringify(data), "EX", 60 * 60); // 1 saat TTL
+    await redisClient.set("golds", JSON.stringify(data), "EX", 24 * 60 * 60); // 1 saat TTL
 
     res.status(200).json({
       status: "success",
@@ -51,13 +67,12 @@ router.get("/getAllGold", async (req, res) => {
 
 router.post("/getGoldDetail", async (req, res) => {
   try {
-    const { name,day } = req.body;
+    const { name, day } = req.body;
 
     const goldName = await Gold.findOne({ name: name });
     const data = await Gold.find({ name: name })
       .sort({ addedDate: -1 })
       .limit(parseInt(day));
-
 
     const formattedData = data.map((item, index, array) => ({
       value: parseFloat(item.lastPrice),

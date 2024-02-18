@@ -4,21 +4,24 @@ const saveStockDataToDb = require("../scrapeSave/saveStockDataToDb");
 const Stock = require("../models/Stock");
 const verifyJWT = require("../middleware/verifyJWT.js");
 const redisClient = require("../shared/redis.js")();
-const cron = require('node-cron');
+const cron = require("node-cron");
 
 router.use(verifyJWT);
 
-cron.schedule('26 10 * * *', async () => {
+cron.schedule("1 0 * * *", async () => {
   try {
-    console.log("Cron Job started at", new Date());
-    // await saveStockDataToDb();
-    console.log('Stock data updated successfully at', new Date());
+    console.log("Cron Job Stock started at", new Date());
+    await saveStockDataToDb();
+    const cachedStocks = await redisClient.get("allStocks");
+    if (cachedStocks) {
+      await redisClient.del("allStocks");
+      console.log("Redis'teki hisseler silindi");
+    }
+    console.log("Stock data updated successfully at", new Date());
   } catch (error) {
-    console.error('Error updating stock data:', error.message);
+    console.error("Error updating stock data:", error.message);
   }
 });
-
-
 
 router.get("/add-stocks", async (req, res) => {
   try {
@@ -50,7 +53,12 @@ router.get("/getAllStock", async (req, res) => {
     const data = await Stock.find({ addedDate: { $gte: today } });
 
     // Veriyi Redis'e kaydet
-    await redisClient.set("allStocks", JSON.stringify(data), "EX", 60 * 60); // 1 saat TTL
+    await redisClient.set(
+      "allStocks",
+      JSON.stringify(data),
+      "EX",
+      24 * 60 * 60
+    ); // 1 saat TTL
 
     res.status(200).json({
       status: "success",
@@ -71,19 +79,24 @@ router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
       .sort({ addedDate: -1 })
       .limit(parseInt(numberOfDays));
 
-    const stockInfo = await Stock.findOne({ name: new RegExp(name, "i") }).sort({ addedDate: -1 });
+    const stockInfo = await Stock.findOne({ name: new RegExp(name, "i") }).sort(
+      { addedDate: -1 }
+    );
 
     // Verileri istenen formata çevir
     const formattedData = data.map((item, index, array) => ({
       value: parseFloat(item.lastPrice.replace(",", ".")),
       date: item.addedDate.toISOString().split("T")[0],
-      label: index === 0 || index === array.length - 1 ? item.addedDate.toISOString().split("T")[0] : null,
+      label:
+        index === 0 || index === array.length - 1
+          ? item.addedDate.toISOString().split("T")[0]
+          : null,
     }));
 
     // Name ve Desc alanlarını ayarlayın
-    const nameArray = stockInfo ? stockInfo.name.split(' ') : [];
-    const namePart1 = nameArray.length > 0 ? nameArray[0] : '';
-    const namePart2 = nameArray.length > 1 ? nameArray.slice(1).join(' ') : '';
+    const nameArray = stockInfo ? stockInfo.name.split(" ") : [];
+    const namePart1 = nameArray.length > 0 ? nameArray[0] : "";
+    const namePart2 = nameArray.length > 1 ? nameArray.slice(1).join(" ") : "";
 
     res.status(200).json({
       status: "success",
@@ -98,7 +111,6 @@ router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
 
 router.get("/getLastStockDetail/:name", async (req, res) => {
   try {

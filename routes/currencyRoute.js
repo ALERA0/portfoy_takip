@@ -4,8 +4,24 @@ const Currency = require("../models/Currency");
 const verifyJWT = require("../middleware/verifyJWT.js");
 const router = express.Router();
 const redisClient = require("../shared/redis.js")();
+const cron = require("node-cron");
 
 router.use(verifyJWT);
+
+cron.schedule("1 0 * * *", async () => {
+  try {
+    console.log("Cron Job Currency started at", new Date());
+    await saveCurrencyDataToDb();
+    const cachedStocks = await redisClient.get("currencies");
+    if (cachedStocks) {
+      await redisClient.del("currencies");
+      console.log("Redis'teki dövizler silindi");
+    }
+    console.log("Currency data updated successfully at", new Date());
+  } catch (error) {
+    console.error("Error updating currency data:", error.message);
+  }
+});
 
 router.get("/add-currencies", async (req, res) => {
   try {
@@ -36,7 +52,12 @@ router.get("/getAllCurrency", async (req, res) => {
     const data = await Currency.find({ addedDate: { $gte: today } });
 
     // Veriyi Redis'e kaydet
-    await redisClient.set("currencies", JSON.stringify(data), "EX", 60 * 60); // 1 saat TTL
+    await redisClient.set(
+      "currencies",
+      JSON.stringify(data),
+      "EX",
+      24 * 60 * 60
+    ); // 1 saat TTL
 
     res.status(200).json({
       status: "success",
@@ -52,7 +73,9 @@ router.get("/getCurrencyDetail/:name/:numberOfDays", async (req, res) => {
   try {
     const { name, numberOfDays } = req.params;
 
-    const currencyName = await Currency.findOne({ name: new RegExp(name, "i") }).sort({ addedDate: -1 });
+    const currencyName = await Currency.findOne({
+      name: new RegExp(name, "i"),
+    }).sort({ addedDate: -1 });
 
     const data = await Currency.find({ name: new RegExp(name, "i") })
       .sort({ addedDate: -1 })
@@ -79,8 +102,6 @@ router.get("/getCurrencyDetail/:name/:numberOfDays", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
-
-
 
 router.post("/searchCurrency/:searchParam", async (req, res) => {
   try {
