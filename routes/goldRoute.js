@@ -50,7 +50,6 @@ router.get("/getAllGold", async (req, res) => {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0); // Bugünün başlangıcı
     const data = await Gold.find({ addedDate: { $gte: today } });
-    console.log(data[0]);
 
     // Veriyi Redis'e kaydet
     await redisClient.set("golds", JSON.stringify(data), "EX", 24 * 60 * 60); // 1 saat TTL
@@ -96,6 +95,8 @@ router.post("/getGoldDetail", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
+
 
 router.post("/searchGold", async (req, res) => {
   try {

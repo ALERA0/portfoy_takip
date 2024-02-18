@@ -138,16 +138,23 @@ router.get("/getLastStockDetail/:name", async (req, res) => {
   }
 });
 
-router.post("/searchStock/:searchParam", async (req, res) => {
+router.post("/searchStock/:searchParam?", async (req, res) => {
   try {
     let { searchParam } = req.params;
-    searchParam = searchParam.toUpperCase();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    const data = await Stock.find({
-      name: new RegExp(searchParam, "i"),
-      addedDate: { $gte: today },
-    });
+
+    let query = {
+      addedDate: { $gte: today }
+    };
+
+    // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele
+    if (searchParam && searchParam.trim() !== "") {
+      query.name = new RegExp(searchParam, "i");
+    }
+
+    const data = await Stock.find(query);
+
     res.status(200).json({
       status: "success",
       message: "Hisseler başarıyla getirildi",

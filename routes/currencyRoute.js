@@ -103,16 +103,23 @@ router.get("/getCurrencyDetail/:name/:numberOfDays", async (req, res) => {
   }
 });
 
-router.post("/searchCurrency/:searchParam", async (req, res) => {
+
+router.post("/searchCurrency/:searchParam?", async (req, res) => {
   try {
     let { searchParam } = req.params;
-    searchParam = searchParam.toUpperCase();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    const data = await Currency.find({
-      name: new RegExp(searchParam, "i"),
-      addedDate: { $gte: today },
-    });
+
+    let query = {
+      addedDate: { $gte: today }
+    };
+
+    // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele
+    if (searchParam && searchParam.trim() !== "") {
+      query.name = new RegExp(searchParam, "i");
+    }
+
+    const data = await Currency.find(query);
     res.status(200).json({
       status: "success",
       message: "Dövizler başarıyla getirildi",
