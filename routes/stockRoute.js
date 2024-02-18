@@ -8,7 +8,7 @@ const cron = require('node-cron');
 
 router.use(verifyJWT);
 
-cron.schedule('* * * * *', async () => {
+cron.schedule('8 3 * * *', async () => {
   try {
     console.log("Cron Job started at", new Date());
     // await saveStockDataToDb();
