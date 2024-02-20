@@ -155,14 +155,31 @@ router.post("/searchStock/:searchParam?", async (req, res) => {
 
     const data = await Stock.find(query);
 
+    // Response formatını güncelle
+    const formattedData = data.map(stock => {
+      const [name, ...descParts] = stock.name.split(' ');
+      const desc = descParts.join(' '); // Kalan kısmı birleştir
+      return {
+        _id: stock._id,
+        lastPrice: stock.lastPrice,
+        name,
+        desc,
+        changePercent: stock.changePercent,
+        addedDate: stock.addedDate,
+        __v: stock.__v
+      };
+    });
+
     res.status(200).json({
       status: "success",
       message: "Hisseler başarıyla getirildi",
-      data,
+      data: formattedData,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
+
 
 module.exports = router;

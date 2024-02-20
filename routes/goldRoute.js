@@ -96,8 +96,6 @@ router.post("/getGoldDetail", async (req, res) => {
   }
 });
 
-
-
 router.post("/searchGold", async (req, res) => {
   try {
     let { searchParam } = req.body;
