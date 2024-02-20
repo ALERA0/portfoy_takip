@@ -125,11 +125,18 @@ router.post("/searchCurrency/:searchParam?", async (req, res) => {
         });
       } else {
         const data = await Currency.find(query);
-        await redisClient.set("currencyData", JSON.stringify(data), "EX", 24 * 60 * 60);
+        // Değişiklik: changePercent alanındaki % işaretini kaldır
+        const formattedData = data.map(currency => ({
+          ...currency.toObject(),
+          changePercent: currency.changePercent.replace('%', ''),
+        }));
+        
+        await redisClient.set("currencyData", JSON.stringify(formattedData), "EX", 24 * 60 * 60);
+        
         return res.status(200).json({
           status: "success",
           message: "Dövizler başarıyla getirildi",
-          data,
+          data: formattedData,
         });
       }
     }
@@ -140,14 +147,21 @@ router.post("/searchCurrency/:searchParam?", async (req, res) => {
     }
 
     const data = await Currency.find(query);
+    // Değişiklik: changePercent alanındaki % işaretini kaldır
+    const formattedData = data.map(currency => ({
+      ...currency.toObject(),
+      changePercent: currency.changePercent.replace('%', ''),
+    }));
+
     res.status(200).json({
       status: "success",
       message: "Dövizler başarıyla getirildi",
-      data,
+      data: formattedData,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 
 module.exports = router;

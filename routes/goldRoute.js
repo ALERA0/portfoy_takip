@@ -118,11 +118,15 @@ router.post("/searchGold", async (req, res) => {
         });
       } else {
         const data = await Gold.find(query);
-        await redisClient.set("goldData", JSON.stringify(data), "EX", 24 * 60 * 60);
+        const formattedData = data.map(currency => ({
+          ...currency.toObject(),
+          changePercent: currency.changePercent.replace('%', ''),
+        }));
+        await redisClient.set("goldData", JSON.stringify(formattedData), "EX", 24 * 60 * 60);
         return res.status(200).json({
           status: "success",
           message: "Altınlar başarıyla getirildi",
-          data,
+          data:formattedData,
         });
       }
     }
@@ -131,11 +135,14 @@ router.post("/searchGold", async (req, res) => {
       query.name = new RegExp(searchParam, "i");
     }
     const data = await Gold.find(query);
-    
+    const formattedData = data.map(currency => ({
+      ...currency.toObject(),
+      changePercent: currency.changePercent.replace('%', ''),
+    }));
     res.status(200).json({
       status: "success",
       message: "Altın / Gümüş verisi başarıyla getirildi",
-      data,
+      data:formattedData,
     });
   } catch (error) {
     res.status(500).json({ status: "error", message: error.message });
