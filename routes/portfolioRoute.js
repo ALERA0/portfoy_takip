@@ -1,4 +1,5 @@
 const express = require("express");
+const randomColor = require("randomcolor");
 const Portfolio = require("../models/Portfolio");
 const verifyJWT = require("../middleware/verifyJWT");
 const PortfolioDetail = require("../models/PortfolioDetail");
@@ -651,5 +652,75 @@ router.put("/updateAsset/:portfolioId/:assetId", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
+
+router.get("/getPortfolioTypeDetails/:portfolioId/:type", async (req, res) => {
+  try {
+    const { portfolioId, type } = req.params;
+    const userId = req.user._id;
+
+    const portfolio = await Portfolio.findOne({
+      _id: portfolioId,
+      createdBy: userId,
+    });
+
+    if (!portfolio) {
+      return res
+        .status(404)
+        .json({ status: "error", message: "Portfolio not found." });
+    }
+
+    // Filtreleme yap
+    const filteredAssets = portfolio.portfolioDetails.filter(
+      (asset) => asset.type === type
+    );
+
+    if (filteredAssets.length === 0) {
+      return res.status(404).json({
+        status: "error",
+        message: `No assets found for the type: ${type} in the portfolio.`,
+      });
+    }
+
+    const totalAssets = filteredAssets.length;
+    const totalValue = filteredAssets.reduce(
+      (total, asset) => total + asset.quantity * asset.lastPrice,
+      0
+    );
+
+    const totalProfitPercentage = filteredAssets.reduce(
+      (total, asset) =>
+        total + ((asset.lastPrice - asset.purchasePrice) / asset.purchasePrice) * 100,
+      0
+    );
+
+    const totalProfitValue = filteredAssets.reduce(
+      (total, asset) => total + (asset.quantity * asset.lastPrice - asset.totalPurchasePrice),
+      0
+    );
+
+    const assetsWithPercentage = filteredAssets.map((asset) => {
+      const assetPercentage = (asset.quantity * asset.lastPrice / totalValue) * 100;
+      const randomColorCode = randomColor({ format: "hex" }); // random hex renk kodu al
+      return { ...asset.toObject(), assetPercentage: parseFloat(assetPercentage.toFixed(2)), color: randomColorCode };
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: `Details for ${type} assets in the portfolio successfully retrieved.`,
+      totalAssets,
+      totalValue: parseFloat(totalValue.toFixed(2)),
+      totalProfitPercentage: parseFloat(totalProfitPercentage.toFixed(2)),
+      totalProfitValue: parseFloat(totalProfitValue.toFixed(2)),
+      assets: assetsWithPercentage,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ status: "error", message: err.message });
+  }
+});
+
+
+
 
 module.exports = router;
