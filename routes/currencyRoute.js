@@ -12,9 +12,9 @@ cron.schedule("1 0 * * *", async () => {
   try {
     console.log("Cron Job Currency started at", new Date());
     await saveCurrencyDataToDb();
-    const cachedStocks = await redisClient.get("currencies");
+    const cachedStocks = await redisClient.get("currencyData");
     if (cachedStocks) {
-      await redisClient.del("currencies");
+      await redisClient.del("currencyData");
       console.log("Redis'teki dövizler silindi");
     }
     console.log("Currency data updated successfully at", new Date());
@@ -113,6 +113,26 @@ router.post("/searchCurrency/:searchParam?", async (req, res) => {
     let query = {
       addedDate: { $gte: today }
     };
+
+    if (searchParam === undefined || searchParam === null) {
+      const cachedCurrency = await redisClient.get("currencyData");
+      if (cachedCurrency) {
+        // Redis'teki veriyi döndür
+        return res.status(200).json({
+          status: "success",
+          message: "Dövizler Redis'ten başarıyla getirildi",
+          data: JSON.parse(cachedCurrency),
+        });
+      } else {
+        const data = await Currency.find(query);
+        await redisClient.set("currencyData", JSON.stringify(data), "EX", 24 * 60 * 60);
+        return res.status(200).json({
+          status: "success",
+          message: "Dövizler başarıyla getirildi",
+          data,
+        });
+      }
+    }
 
     // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele
     if (searchParam && searchParam.trim() !== "") {

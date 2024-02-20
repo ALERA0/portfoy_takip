@@ -12,9 +12,9 @@ cron.schedule("1 0 * * *", async () => {
   try {
     console.log("Cron Job Gold started at", new Date());
     await saveGoldDataToDb();
-    const cachedStocks = await redisClient.get("golds");
+    const cachedStocks = await redisClient.get("goldData");
     if (cachedStocks) {
-      await redisClient.del("golds");
+      await redisClient.del("goldData");
       console.log("Redis'teki altın verileri silindi");
     }
     console.log("Gold data updated successfully at", new Date());
@@ -102,10 +102,36 @@ router.post("/searchGold", async (req, res) => {
     searchParam = searchParam.toUpperCase();
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    const data = await Gold.find({
-      name: new RegExp(searchParam, "i"),
-      addedDate: { $gte: today },
-    });
+
+    let query = {
+      addedDate: { $gte: today }
+    };
+
+    if (searchParam === undefined || searchParam === null || searchParam === "") {
+      const cachedGold = await redisClient.get("goldData");
+      if (cachedGold) {
+        // Redis'teki veriyi döndür
+        return res.status(200).json({
+          status: "success",
+          message: "Altınlar Redis'ten başarıyla getirildi",
+          data: JSON.parse(cachedGold),
+        });
+      } else {
+        const data = await Gold.find(query);
+        await redisClient.set("goldData", JSON.stringify(data), "EX", 24 * 60 * 60);
+        return res.status(200).json({
+          status: "success",
+          message: "Altınlar başarıyla getirildi",
+          data,
+        });
+      }
+    }
+
+    if (searchParam && searchParam.trim() !== "") {
+      query.name = new RegExp(searchParam, "i");
+    }
+    const data = await Gold.find(query);
+    
     res.status(200).json({
       status: "success",
       message: "Altın / Gümüş verisi başarıyla getirildi",

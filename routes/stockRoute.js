@@ -12,9 +12,9 @@ cron.schedule("1 0 * * *", async () => {
   try {
     console.log("Cron Job Stock started at", new Date());
     await saveStockDataToDb();
-    const cachedStocks = await redisClient.get("allStocks");
+    const cachedStocks = await redisClient.get("stockData");
     if (cachedStocks) {
-      await redisClient.del("allStocks");
+      await redisClient.del("stockData");
       console.log("Redis'teki hisseler silindi");
     }
     console.log("Stock data updated successfully at", new Date());
@@ -148,6 +148,41 @@ router.post("/searchStock/:searchParam?", async (req, res) => {
       addedDate: { $gte: today }
     };
 
+    if (searchParam === undefined || searchParam === null) {
+      const cachedStocks = await redisClient.get("stockData");
+      if (cachedStocks) {
+        // Redis'teki veriyi döndür
+        return res.status(200).json({
+          status: "success",
+          message: "Hisseler Redis'ten başarıyla getirildi",
+          data: JSON.parse(cachedStocks),
+        });
+      } else {
+        const data = await Stock.find(query);
+        // Response formatını güncelle
+        const formattedData = data.map(stock => {
+          const [name, ...descParts] = stock.name.split(' ');
+          const desc = descParts.join(' '); // Kalan kısmı birleştir
+          return {
+            _id: stock._id,
+            lastPrice: stock.lastPrice,
+            name,
+            desc,
+            changePercent: stock.changePercent,
+            addedDate: stock.addedDate,
+            __v: stock.__v
+          };
+        });
+
+        await redisClient.set("stockData", JSON.stringify(formattedData), "EX", 24 * 60 * 60);
+        return res.status(200).json({
+          status: "success",
+          message: "Hisseler başarıyla getirildi",
+          data: formattedData,
+        });
+      }
+    }
+
     // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele
     if (searchParam && searchParam.trim() !== "") {
       query.name = new RegExp(searchParam, "i");
@@ -179,6 +214,7 @@ router.post("/searchStock/:searchParam?", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 
 
 
