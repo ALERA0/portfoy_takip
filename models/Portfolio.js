@@ -4,7 +4,6 @@ const PortfolioDetail = require("./PortfolioDetail");
 const portfolioSchema = new mongoose.Schema({
   name: {
     type: String,
-    index: true,
   },
   portfolioDetails: [PortfolioDetail.schema],
   createdBy: {

@@ -148,6 +148,10 @@ router.post("/searchStock/:searchParam?", async (req, res) => {
       addedDate: { $gte: today }
     };
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     if (searchParam === undefined || searchParam === null) {
       const cachedStocks = await redisClient.get("stockData");
       if (cachedStocks) {
@@ -185,10 +189,10 @@ router.post("/searchStock/:searchParam?", async (req, res) => {
 
     // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele
     if (searchParam && searchParam.trim() !== "") {
-      query.name = new RegExp(searchParam, "i");
+      query.name = new RegExp(`^${searchParam}`, "i");
     }
 
-    const data = await Stock.find(query);
+    const data = await Stock.find(query).skip(skip).limit(limit);
 
     // Response formatını güncelle
     const formattedData = data.map(stock => {

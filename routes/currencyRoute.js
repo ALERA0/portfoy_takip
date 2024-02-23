@@ -114,6 +114,10 @@ router.post("/searchCurrency/:searchParam?", async (req, res) => {
       addedDate: { $gte: today }
     };
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     if (searchParam === undefined || searchParam === null) {
       const cachedCurrency = await redisClient.get("currencyData");
       if (cachedCurrency) {
@@ -125,14 +129,13 @@ router.post("/searchCurrency/:searchParam?", async (req, res) => {
         });
       } else {
         const data = await Currency.find(query);
-        // Değişiklik: changePercent alanındaki % işaretini kaldır
         const formattedData = data.map(currency => ({
           ...currency.toObject(),
           changePercent: currency.changePercent.replace('%', ''),
         }));
-        
+
         await redisClient.set("currencyData", JSON.stringify(formattedData), "EX", 24 * 60 * 60);
-        
+
         return res.status(200).json({
           status: "success",
           message: "Dövizler başarıyla getirildi",
@@ -143,11 +146,11 @@ router.post("/searchCurrency/:searchParam?", async (req, res) => {
 
     // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele
     if (searchParam && searchParam.trim() !== "") {
-      query.name = new RegExp(searchParam, "i");
+      query.name = new RegExp(`^${searchParam}`, "i");
     }
 
-    const data = await Currency.find(query);
-    // Değişiklik: changePercent alanındaki % işaretini kaldır
+    const data = await Currency.find(query).skip(skip).limit(limit);
+    // Değişiklik: changePercent alanındaki % işaretini kaldır  
     const formattedData = data.map(currency => ({
       ...currency.toObject(),
       changePercent: currency.changePercent.replace('%', ''),
@@ -162,6 +165,7 @@ router.post("/searchCurrency/:searchParam?", async (req, res) => {
     res.status(500).json({ status: "error", message: error.message });
   }
 });
+
 
 
 module.exports = router;

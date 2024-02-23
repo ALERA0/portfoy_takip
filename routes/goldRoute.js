@@ -107,6 +107,10 @@ router.post("/searchGold", async (req, res) => {
       addedDate: { $gte: today }
     };
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
     if (searchParam === undefined || searchParam === null || searchParam === "") {
       const cachedGold = await redisClient.get("goldData");
       if (cachedGold) {
@@ -132,9 +136,9 @@ router.post("/searchGold", async (req, res) => {
     }
 
     if (searchParam && searchParam.trim() !== "") {
-      query.name = new RegExp(searchParam, "i");
+      query.name = new RegExp(`^${searchParam}`, "i");
     }
-    const data = await Gold.find(query);
+    const data = await Gold.find(query).skip(skip).limit(limit);
     const formattedData = data.map(currency => ({
       ...currency.toObject(),
       changePercent: currency.changePercent.replace('%', ''),
