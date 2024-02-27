@@ -676,9 +676,15 @@ router.get("/getPortfolioTypeDetails/:portfolioId/:type", async (req, res) => {
     );
 
     if (filteredAssets.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         status: "error",
         message: `No assets found for the type: ${type} in the portfolio.`,
+        type: type,
+        totalAssets: 0,
+        totalValue: 0,
+        totalProfitPercentage: 0,
+        totalProfitValue: 0,
+        assets: [],
       });
     }
 
@@ -702,12 +708,24 @@ router.get("/getPortfolioTypeDetails/:portfolioId/:type", async (req, res) => {
     const assetsWithPercentage = filteredAssets.map((asset) => {
       const assetPercentage = (asset.quantity * asset.lastPrice / totalValue) * 100;
       const randomColorCode = randomColor({ format: "hex" }); // random hex renk kodu al
-      return { ...asset.toObject(), assetPercentage: parseFloat(assetPercentage.toFixed(2)), color: randomColorCode };
+
+      // Modify asset name to display only the first word for type "Stock"
+      const modifiedName = type === "Stock" ? asset.name.split(' ')[0] : asset.name;
+
+      return { 
+        ...asset.toObject(),
+        assetPercentage: parseFloat(assetPercentage.toFixed(2)),
+        color: randomColorCode,
+        name: modifiedName,  // Use modifiedName instead of asset.name
+      };
     });
+
+    
 
     res.status(200).json({
       status: "success",
       message: `Details for ${type} assets in the portfolio successfully retrieved.`,
+      type: filteredAssets[0].type,
       totalAssets,
       totalValue: parseFloat(totalValue.toFixed(2)),
       totalProfitPercentage: parseFloat(totalProfitPercentage.toFixed(2)),
