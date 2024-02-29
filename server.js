@@ -27,13 +27,15 @@ const stockRouter = require("./routes/stockRoute.js");
 const currencyRouter = require("./routes/currencyRoute.js");
 const goldRouter = require("./routes/goldRoute.js");
 const portfolioRouter = require("./routes/portfolioRoute.js");
+const fundRouter = require("./routes/fundRoute.js");
+
 
 app.use(cookieParser());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(cors());
 
-app.use("/api", userRouter, stockRouter, currencyRouter, goldRouter,portfolioRouter);
+app.use("/api", userRouter, stockRouter, currencyRouter, goldRouter,portfolioRouter,fundRouter);
 app.use("/auth", authRouter);
 
 
