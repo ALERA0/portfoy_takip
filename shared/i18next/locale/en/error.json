@@ -1,0 +1,6 @@
+{
+    "REQUIRED_FIELD": "All fields are required.",
+    "USER_NOT_FOUND": "Email or password is incorrect.",
+    "USER_ALREADY_EXISTS": "User already exists.","INVALID_USER_INFO": "Invalid user information.",
+    "STOCK_NOT_FOUND": "Stock not found."
+}

@@ -5,6 +5,8 @@ const Stock = require("../models/Stock");
 const verifyJWT = require("../middleware/verifyJWT.js");
 const redisClient = require("../shared/redis.js")();
 const cron = require("node-cron");
+const { errorCodes } = require("../shared/handlers/error/errorCodes.js");
+const { customError } = require("../shared/handlers/error/customError.js");
 
 router.use(verifyJWT);
 
@@ -74,14 +76,22 @@ router.get("/getStockDetail/:name/:numberOfDays", async (req, res) => {
   try {
     const { name, numberOfDays } = req.params;
 
-    // Belirli bir hissenin adına ve belirtilen sayıda gün içindeki verileri al
+
     const data = await Stock.find({ name: new RegExp(name, "i") })
       .sort({ addedDate: -1 })
       .limit(parseInt(numberOfDays));
 
+      
+
     const stockInfo = await Stock.findOne({ name: new RegExp(name, "i") }).sort(
       { addedDate: -1 }
     );
+
+    if (!stockInfo || stockInfo.length === 0) {
+      console.log(stockInfo);
+      console.log("STOCK ERRRRORR")
+     throw new customError(errorCodes.STOCK_NOT_FOUND);
+    }
 
     // Verileri istenen formata çevir
     const formattedData = data.map((item, index, array) => ({

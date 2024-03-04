@@ -2,6 +2,7 @@ const User = require("../models/User");
 const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const Portfolio = require("../models/Portfolio");
+const { customError } = require("../shared/handlers/error/customError.js");
 
 
 
@@ -28,14 +29,14 @@ const createNewUser = asyncHandler(async (req, res) => {
 
   // Confirm data
   if (!username || !password || !email) {
-    return res.status(400).json({ status :"error",message: "Bütün alanlar doldurulmalıdır." });
+    throw new customError(errorCodes.REQUIRED_FIELD);
   }
 
   // Check for duplicate username
   const duplicate = await User.findOne({ email }).lean().exec();
 
   if (duplicate) {
-    return res.status(409).json({status :"error", message: "Aynı maille bir kayıt zaten var" });
+    throw new customError(errorCodes.USER_ALREADY_EXISTS);
   }
 
   // Hash password
@@ -43,13 +44,7 @@ const createNewUser = asyncHandler(async (req, res) => {
 
   const userObject = { username, password: hashedPwd, roles,email };
 
-  // Calculate the registration date
-  const registrationDate = new Date();
-  const accessExpiration = new Date(
-    registrationDate.getTime() + 180 * 24 * 60 * 60 * 1000
-  ); // 6 ay eklenir (180 gün)
-
-  userObject.accessExpiration = accessExpiration;
+ 
 
   // Create and store new user
   const user = await User.create(userObject);
@@ -71,9 +66,7 @@ const createNewUser = asyncHandler(async (req, res) => {
       portfolioId: portfolio._id
     });
   } else {
-    res
-      .status(400)
-      .json({ status: "error", message: "Invalid user data received" });
+    throw new customError(errorCodes.INVALID_USER_INFO);
   }
 });
 

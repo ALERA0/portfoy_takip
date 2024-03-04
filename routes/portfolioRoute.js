@@ -7,6 +7,9 @@ const { default: mongoose } = require("mongoose");
 const Currency = require("../models/Currency");
 const Gold = require("../models/Gold");
 const Stock = require("../models/Stock");
+const { errorCodes } = require("../shared/handlers/error/errorCodes");
+const { customError } = require("../shared/handlers/error/customError");
+
 
 const router = express.Router();
 
@@ -121,9 +124,7 @@ router.get("/getPortfolioDetails/:portfolioId", async (req, res) => {
     });
 
     if (!portfolio) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "Portfolio not found." });
+      throw new customError(errorCodes.STOCK_NOT_FOUND)
     }
 
     // Her bir varlık için lastPrice'ı güncelle
