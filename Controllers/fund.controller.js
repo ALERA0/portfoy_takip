@@ -37,6 +37,7 @@ const getFundDetail = asyncHandler(async (req, res) => {
     desc: fundInfo.desc,
     name: fundInfo.name,
     lastPrice: fundInfo.lastPrice,
+    changePercent: fundInfo.changePercent,
     data: formattedData,
   });
 });
@@ -65,10 +66,16 @@ const searchFund = asyncHandler(async (req, res) => {
       });
     } else {
       const data = await Fund.find(query);
+      const formattedData = data.map((fund) => ({
+        ...fund._doc,
+        changePercent: parseFloat(fund.changePercent.replace(",", ".")).toFixed(
+          2
+        ),
+      }));
 
       await redisClient.set(
         "fundData",
-        JSON.stringify(data),
+        JSON.stringify(formattedData),
         "EX",
         24 * 60 * 60
       );
@@ -76,7 +83,7 @@ const searchFund = asyncHandler(async (req, res) => {
       return res.status(200).json({
         status: "success",
         message: "Fonlar başarıyla getirildi",
-        data: data,
+        data: formattedData,
       });
     }
   }
@@ -88,10 +95,15 @@ const searchFund = asyncHandler(async (req, res) => {
 
   const data = await Fund.find(query).skip(skip).limit(limit);
 
+  const formattedData = data.map((fund) => ({
+    ...fund._doc,
+    changePercent: parseFloat(fund.changePercent.replace(",", ".")).toFixed(2),
+  }));
+
   res.status(200).json({
     status: "success",
     message: "Fonlar başarıyla getirildi",
-    data: data,
+    data: formattedData,
   });
 });
 
