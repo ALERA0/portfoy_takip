@@ -67,7 +67,7 @@ const searchFund = asyncHandler(async (req, res) => {
       const data = await Fund.find(query);
 
       await redisClient.set(
-        "currencyData",
+        "fundData",
         JSON.stringify(data),
         "EX",
         24 * 60 * 60
