@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Fund = require("../models/Fund");
 const { customError } = require("../shared/handlers/error/customError");
 const { errorCodes } = require("../shared/handlers/error/errorCodes");
+const redisClient = require("../shared/redis.js")();
 
 const getFundDetail = asyncHandler(async (req, res) => {
   const { name, numberOfDays } = req.params;
