@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Currency = require("../models/Currency");
 const { errorCodes } = require("../shared/handlers/error/errorCodes.js");
 const { customError } = require("../shared/handlers/error/customError.js");
+const redisClient = require("../shared/redis.js")();
 
 const getCurrencyDetail = asyncHandler(async (req, res) => {
   const { name, numberOfDays } = req.params;
@@ -11,8 +12,7 @@ const getCurrencyDetail = asyncHandler(async (req, res) => {
   }).sort({ addedDate: -1 });
 
   if (!currencyName) {
-    console.log(errorCodes.REQUIRED_FIELD);
-    throw new customError(errorCodes.REQUIRED_FIELD);
+    throw new customError(errorCodes.CURRENCY_NOT_FOUND);
   }
 
   const data = await Currency.find({ name: new RegExp(name, "i") })

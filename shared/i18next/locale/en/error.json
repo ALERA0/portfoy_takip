@@ -2,5 +2,10 @@
     "REQUIRED_FIELD": "All fields are required.",
     "USER_NOT_FOUND": "Email or password is incorrect.",
     "USER_ALREADY_EXISTS": "User already exists.","INVALID_USER_INFO": "Invalid user information.",
-    "STOCK_NOT_FOUND": "Stock not found."
+    "STOCK_NOT_FOUND": "Stock not found.",
+    "CURRENCY_NOT_FOUND":"Currency not found.",
+    "GOLD_NOT_FOUND":"Gold not found.",
+    "FUND_NOT_FOUND":"Fund not found.",
+    "PORTFOLIO_NOT_FOUND":"Portfolio not found.",
+    "NAME_CAN_NOT_BE_EMPTY":"Portfolio name can not be empty."
 }
