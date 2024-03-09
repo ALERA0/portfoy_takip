@@ -8,7 +8,7 @@
     "FUND_NOT_FOUND":"Fund not found.",
     "PORTFOLIO_NOT_FOUND":"Portfolio not found.",
     "NAME_CAN_NOT_BE_EMPTY":"Portfolio name can not be empty.","PORTFOLIO_NAME_TOO_SHORT":"Portfolio name must be at least 3 characters.",
-    "PORTFOLIO_ALREADY_EXISTS":"Portfolio already exists.",
+    "PORTFOLIO_ALREADY_EXISTS":"A portfolio with this name already exists.",
     "MISSING_FIELD":"Please fill in all fields.",
     "INVALID_ASSET_TYPE":"Invalid asset type.",
     "ASSET_NOT_FOUND":"Asset not found."

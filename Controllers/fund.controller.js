@@ -55,7 +55,7 @@ const searchFund = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  if (searchParam === undefined || searchParam === null) {
+  if ((searchParam === undefined || searchParam === null) && page === 1) {
     const cachedFund = await redisClient.get("fundData");
     if (cachedFund) {
       // Redis'teki veriyi döndür
@@ -65,7 +65,7 @@ const searchFund = asyncHandler(async (req, res) => {
         data: JSON.parse(cachedFund),
       });
     } else {
-      const data = await Fund.find(query);
+      const data = await Fund.find(query).skip(skip).limit(limit);
       const formattedData = data.map((fund) => ({
         ...fund._doc,
         changePercent: parseFloat(fund.changePercent.replace(",", ".")).toFixed(

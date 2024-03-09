@@ -3,7 +3,6 @@ const { customError } = require("./customError");
 const errorHandler = (err, req, res, next) => {
     if (err instanceof customError) {
       const localizedMessage = req.t(err.message);
-      console.log(err)
       return res
         .status(err.errorCode)
         .json({

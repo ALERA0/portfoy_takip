@@ -29,6 +29,7 @@ const goldRouter = require("./routes/goldRoute.js");
 const portfolioRouter = require("./routes/portfolioRoute.js");
 const fundRouter = require("./routes/fundRoute.js");
 const { errorHandler } = require("./shared/handlers/error/errorHandler.js");
+const { successHandler } = require("./shared/handlers/success/successHandlers.js");
 
 
 app.use(cookieParser());
@@ -48,5 +49,7 @@ app.listen(port, () => {
 });
 
 app.use(errorHandler)
+app.use(successHandler)
+
 
 

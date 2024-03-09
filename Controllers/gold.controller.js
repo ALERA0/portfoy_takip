@@ -50,7 +50,7 @@ const searchGold = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  if (searchParam === undefined || searchParam === null || searchParam === "") {
+  if ((searchParam === undefined || searchParam === null || searchParam === "") && page === 1) {
     const cachedGold = await redisClient.get("goldData");
     if (cachedGold) {
       // Redis'teki veriyi döndür
@@ -60,7 +60,7 @@ const searchGold = asyncHandler(async (req, res) => {
         data: JSON.parse(cachedGold),
       });
     } else {
-      const data = await Gold.find(query);
+      const data = await Gold.find(query).skip(skip).limit(limit);
       const formattedData = data.map((currency) => ({
         ...currency.toObject(),
         changePercent: currency.changePercent.replace("%", ""),

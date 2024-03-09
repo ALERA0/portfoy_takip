@@ -38,21 +38,20 @@ const getCurrencyDetail = asyncHandler(async (req, res) => {
   });
 });
 
-const searchCurrency = asyncHandler(async(req,res)=>{
-  
+const searchCurrency = asyncHandler(async (req, res) => {
   let { searchParam } = req.params;
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
 
   let query = {
-    addedDate: { $gte: today }
+    addedDate: { $gte: today },
   };
 
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  if (searchParam === undefined || searchParam === null) {
+  if ((searchParam === undefined || searchParam === null) && page === 1) {
     const cachedCurrency = await redisClient.get("currencyData");
     if (cachedCurrency) {
       // Redis'teki veriyi döndür
@@ -62,13 +61,18 @@ const searchCurrency = asyncHandler(async(req,res)=>{
         data: JSON.parse(cachedCurrency),
       });
     } else {
-      const data = await Currency.find(query);
-      const formattedData = data.map(currency => ({
+      const data = await Currency.find(query).skip(skip).limit(limit);
+      const formattedData = data.map((currency) => ({
         ...currency.toObject(),
-        changePercent: currency.changePercent.replace('%', ''),
+        changePercent: currency.changePercent.replace("%", ""),
       }));
 
-      await redisClient.set("currencyData", JSON.stringify(formattedData), "EX", 24 * 60 * 60);
+      await redisClient.set(
+        "currencyData",
+        JSON.stringify(formattedData),
+        "EX",
+        24 * 60 * 60
+      );
 
       return res.status(200).json({
         status: "success",
@@ -84,10 +88,10 @@ const searchCurrency = asyncHandler(async(req,res)=>{
   }
 
   const data = await Currency.find(query).skip(skip).limit(limit);
-  // Değişiklik: changePercent alanındaki % işaretini kaldır  
-  const formattedData = data.map(currency => ({
+  // Değişiklik: changePercent alanındaki % işaretini kaldır
+  const formattedData = data.map((currency) => ({
     ...currency.toObject(),
-    changePercent: currency.changePercent.replace('%', ''),
+    changePercent: currency.changePercent.replace("%", ""),
   }));
 
   res.status(200).json({
@@ -95,7 +99,6 @@ const searchCurrency = asyncHandler(async(req,res)=>{
     message: "Dövizler başarıyla getirildi",
     data: formattedData,
   });
+});
 
-})
-
-module.exports = { getCurrencyDetail,searchCurrency};
+module.exports = { getCurrencyDetail, searchCurrency };

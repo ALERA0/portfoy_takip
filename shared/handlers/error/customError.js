@@ -3,7 +3,6 @@ class customError extends Error {
       super(errorType.message);
       this.errorCode = errorType.code;
       this.message = errorType.message;
-      console.log(errorType.code, errorType.message)
       Object.setPrototypeOf(this, customError.prototype);
     }
   }

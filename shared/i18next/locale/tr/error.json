@@ -1,3 +1,17 @@
 {
-    "REQUIRED_FIELD": "Bütün alanlar zorunludur."
+    "REQUIRED_FIELD": "Tüm alanlar zorunludur.",
+    "USER_NOT_FOUND": "E-posta veya şifre yanlış.",
+    "USER_ALREADY_EXISTS": "Bu bilgilere ait bir kullanıcı zaten var.",
+    "INVALID_USER_INFO": "Geçersiz kullanıcı bilgisi.",
+    "STOCK_NOT_FOUND": "Hisse bulunamadı.",
+    "CURRENCY_NOT_FOUND": "Para birimi bulunamadı.",
+    "GOLD_NOT_FOUND": "Altın bulunamadı.",
+    "FUND_NOT_FOUND": "Fon bulunamadı.",
+    "PORTFOLIO_NOT_FOUND": "Portföy bulunamadı.",
+    "NAME_CAN_NOT_BE_EMPTY": "Portföy adı boş olamaz.",
+    "PORTFOLIO_NAME_TOO_SHORT": "Portföy adı en az 3 karakter olmalıdır.",
+    "PORTFOLIO_ALREADY_EXISTS": "Bu isimde bir portfoy zaten var.",
+    "MISSING_FIELD": "Lütfen tüm alanları doldurun.",
+    "INVALID_ASSET_TYPE": "Geçersiz varlık türü.",
+    "ASSET_NOT_FOUND": "Varlık bulunamadı."
 }

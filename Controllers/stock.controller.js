@@ -57,10 +57,10 @@ const searchStock = asyncHandler(async (req, res) => {
   };
 
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
+  const limit = parseInt(req.query.limit) || 20;
   const skip = (page - 1) * limit;
 
-  if (searchParam === undefined || searchParam === null) {
+  if ((searchParam === undefined || searchParam === null) && page === 1) {
     const cachedStocks = await redisClient.get("stockData");
     if (cachedStocks) {
       // Redis'teki veriyi döndür
@@ -70,7 +70,7 @@ const searchStock = asyncHandler(async (req, res) => {
         data: JSON.parse(cachedStocks),
       });
     } else {
-      const data = await Stock.find(query);
+      const data = await Stock.find(query).skip(skip).limit(limit);
       // Response formatını güncelle
       const formattedData = data.map((stock) => {
         const [name, ...descParts] = stock.name.split(" ");

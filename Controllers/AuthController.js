@@ -5,7 +5,10 @@ const asyncHandler = require("express-async-handler");
 const Portfolio = require("../models/Portfolio");
 const { errorCodes } = require("../shared/handlers/error/errorCodes.js");
 const { customError } = require("../shared/handlers/error/customError.js");
-
+const {
+  customSuccess,
+} = require("../shared/handlers/success/customSuccess.js");
+const { successCodes } = require("../shared/handlers/success/successCodes.js");
 
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
@@ -25,12 +28,9 @@ const login = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.USER_NOT_FOUND);
   }
 
- 
-
   const match = await bcrypt.compare(password, foundUser.password);
 
-  if (!match)
-  throw new customError(errorCodes.USER_NOT_FOUND);
+  if (!match) throw new customError(errorCodes.USER_NOT_FOUND);
 
   const accessToken = jwt.sign(
     {
@@ -44,12 +44,13 @@ const login = asyncHandler(async (req, res) => {
     { expiresIn: "1d" }
   );
 
-  
+  const successResponse = new customSuccess(successCodes.LOGIN_SUCCESS, {
+    accessToken,
+    defaultPortfolioId,
+  });
 
- 
-  res.json({ status: "success", accessToken, defaultPortfolioId });
+  res.json(successResponse);
 });
-
 
 const refresh = (req, res) => {
   const cookies = req.cookies;
@@ -85,7 +86,6 @@ const refresh = (req, res) => {
     })
   );
 };
-
 
 const logout = (req, res) => {
   const cookies = req.cookies;
