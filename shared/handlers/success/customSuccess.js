@@ -4,6 +4,7 @@ class customSuccess {
     this.successCode = successType.code;
     this.successMessage = successType.message;
     this.data = data;
+    this.status = "success"
     Object.setPrototypeOf(this, customSuccess.prototype);
   }
 }
