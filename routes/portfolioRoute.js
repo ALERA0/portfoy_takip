@@ -1,15 +1,8 @@
 const express = require("express");
-const randomColor = require("randomcolor");
 const Portfolio = require("../models/Portfolio");
 const verifyJWT = require("../middleware/verifyJWT");
-const PortfolioDetail = require("../models/PortfolioDetail");
-const { default: mongoose } = require("mongoose");
-const Currency = require("../models/Currency");
-const Gold = require("../models/Gold");
-const Stock = require("../models/Stock");
 const portfolioController = require("../Controllers/portfolio.controller");
-const { errorCodes } = require("../shared/handlers/error/errorCodes");
-const { customError } = require("../shared/handlers/error/customError");
+
 
 const router = express.Router();
 

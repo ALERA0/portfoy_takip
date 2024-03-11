@@ -6,6 +6,8 @@ const { default: mongoose } = require("mongoose");
 const Currency = require("../models/Currency");
 const Gold = require("../models/Gold");
 const Stock = require("../models/Stock");
+const randomColor = require("randomcolor");
+
 
 const allowedTypes = [
   "Stock",
