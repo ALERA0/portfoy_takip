@@ -28,45 +28,16 @@ router.route("/createPortfolio").post(portfolioController.createPortfolio);
 
 router.route("/addAsset/:portfolioId").post(portfolioController.addAsset);
 
-router.delete("/removeAsset/:portfolioId/:assetId", async (req, res) => {
-  try {
-    const { portfolioId, assetId } = req.params;
-
-    // Portföyü bul
-    const portfolio = await Portfolio.findById(portfolioId);
-
-    if (!portfolio) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "Portfolio not found." });
-    }
-
-    // Varlığı bul ve kaldır
-    const updatedPortfolioDetails = portfolio.portfolioDetails.filter(
-      (asset) => asset._id.toString() !== assetId
-    );
-
-    // Güncellenmiş portföyü kaydet
-    await Portfolio.findByIdAndUpdate(
-      portfolioId,
-      { portfolioDetails: updatedPortfolioDetails },
-      { new: true }
-    );
-
-    res.status(200).json({
-      status: "success",
-      message: "Varlık portfoyunuzden başarıyla çıkarıldı.",
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ status: "error", message: err.message });
-  }
-});
+router.route("/removeAsset/:portfolioId/:assetId").delete(portfolioController.removeAsset);
 
 router.route("/getAssetDetails").post(portfolioController.getAssetDetails);
 
 router.route("/updateAsset/:portfolioId/:assetId").put(portfolioController.updateAsset);
 
 router.route("/getPortfolioTypeDetails/:portfolioId/:type").get(portfolioController.getPortfolioTypeDetails);
+
+router.route("/updateBudget").put(portfolioController.updateBudget);
+
+router.route("/getBudget").get(portfolioController.getBudgetDetails);
 
 module.exports = router;

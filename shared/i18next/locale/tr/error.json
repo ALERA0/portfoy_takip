@@ -13,5 +13,8 @@
     "PORTFOLIO_ALREADY_EXISTS": "Bu isimde bir portfoy zaten var.",
     "MISSING_FIELD": "Lütfen tüm alanları doldurun.",
     "INVALID_ASSET_TYPE": "Geçersiz varlık türü.",
-    "ASSET_NOT_FOUND": "Varlık bulunamadı."
+    "ASSET_NOT_FOUND": "Varlık bulunamadı.",
+    "BUDGET_INSUFFICIENT":"Bütçe yetersiz.",
+    "INVALID_BUDGET_VALUE":"Geçersiz değer girdiniz.",
+    "BUDGET_NOT_FOUND":"Bütçe bulunamadı."
 }

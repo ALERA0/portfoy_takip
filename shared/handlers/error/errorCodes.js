@@ -60,6 +60,18 @@ const errorCodes = {
   ASSET_NOT_FOUND:{
     code: StatusCodes.NOT_FOUND,
     message: "ASSET_NOT_FOUND",
+  },
+  BUDGET_INSUFFICIENT:{
+    code: StatusCodes.BAD_REQUEST,
+    message: "BUDGET_INSUFFICIENT",
+  },
+  BUDGET_NOT_FOUND:{
+    code:StatusCodes.NOT_FOUND,
+    message:"BUDGET_NOT_FOUND"
+  },
+  INVALID_BUDGET_VALUE:{
+    code:StatusCodes.BAD_REQUEST,
+    message:"INVALID_BUDGET_VALUE"
   }
 };
 

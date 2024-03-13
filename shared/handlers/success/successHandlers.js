@@ -1,16 +1,20 @@
-const { customSuccess } = require('./customSuccess');
+const i18next = require("../../i18next/i18nextConfig"); // Dosya yolunu düzeltin
 
-const successHandler = (success, req, res, next) => {
-  if (success instanceof customSuccess) {
-    const localizedMessage = req.t(success.message);
-    return res.status(success.successCode).send({
-      status: 'success',
-      successCode: success.successCode,
-      message: localizedMessage,
-    });
-  }
+const successHandler = (req, res, next) => {
+  const originalJson = res.json;
 
-  res.status(500).send({ status:"error", message: 'Unknown Error' });
+  res.json = function (data) {
+    const localizedMessage = req.t(data.message);
+    if (data && data.message) {
+      // Translate the success message based on the user's language
+      data.message = localizedMessage;
+      console.log(data.message);
+    }
+
+    originalJson.call(res, data);
+  };
+
+  next();
 };
 
 module.exports = { successHandler };

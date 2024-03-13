@@ -7,7 +7,8 @@ const Currency = require("../models/Currency");
 const Gold = require("../models/Gold");
 const Stock = require("../models/Stock");
 const randomColor = require("randomcolor");
-
+const Budget = require("../models/Budget");
+const PortfolioDetail = require("../models/PortfolioDetail");
 
 const allowedTypes = [
   "Stock",
@@ -46,7 +47,6 @@ const getAllPortfolio = asyncHandler(async (req, res) => {
 const updatedPortfolio = asyncHandler(async (req, res) => {
   const { portfolioId } = req.params;
   const { name } = req.body;
-  console.log(name, "NAME");
 
   if (name === "" || name == undefined) {
     throw new customError(errorCodes.NAME_CAN_NOT_BE_EMPTY);
@@ -344,6 +344,15 @@ const addAsset = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.PORTFOLIO_NOT_FOUND);
   }
 
+  const budget = await Budget.findOne({ createdBy: req.user._id });
+
+  if (quantity * purchasePrice > budget.totalValue) {
+    throw new customError(errorCodes.BUDGET_INSUFFICIENT);
+  } else {
+    budget.totalValue -= parseFloat(quantity * purchasePrice).toFixed(2);
+    await budget.save();
+  }
+
   // Kontrol: Aynı isim ve türde varlık zaten portföyde var mı?
   const existingAsset = portfolio.portfolioDetails.find(
     (asset) => asset.name === name.toUpperCase() && asset.type === type
@@ -395,6 +404,49 @@ const addAsset = asyncHandler(async (req, res) => {
     status: "success",
     message: "Portfolio detail successfully added.",
     newPortfolioDetail,
+  });
+});
+
+const removeAsset = asyncHandler(async (req, res) => {
+  const { portfolioId, assetId } = req.params;
+
+  // Portföyü bul
+  const portfolio = await Portfolio.findById(portfolioId);
+
+  if (!portfolio) {
+    throw new customError(errorCodes.PORTFOLIO_NOT_FOUND);
+  }
+
+  // Varlığı bul ve kaldır
+  const assetToRemove = portfolio.portfolioDetails.find(
+    (asset) => asset._id.toString() === assetId
+  );
+
+  if (!assetToRemove) {
+    throw new customError(errorCodes.ASSET_NOT_FOUND);
+  }
+
+  const updatedPortfolioDetails = portfolio.portfolioDetails.filter(
+    (asset) => asset._id.toString() !== assetId
+  );
+
+  console.log(assetToRemove);
+  // Hesaplamaları yap
+  const budget = await Budget.findOne({ createdBy: req.user._id });
+  budget.totalValue += assetToRemove.totalAssetValue;
+  budget.totalProfitValue += parseFloat(assetToRemove.profitValue);
+  await budget.save();
+
+  // Güncellenmiş portföyü kaydet
+  await Portfolio.findByIdAndUpdate(
+    portfolioId,
+    { portfolioDetails: updatedPortfolioDetails },
+    { new: true }
+  );
+
+  res.status(200).json({
+    status: "success",
+    message: "Varlık portfoyunuzden başarıyla çıkarıldı.",
   });
 });
 
@@ -471,8 +523,7 @@ const getAssetDetails = asyncHandler(async (req, res) => {
     const currency = await Currency.findOne({ name: asset.name });
     namefirst = currency.name;
     description = currency.desc;
-  }
-  else if (type === "Gold") {
+  } else if (type === "Gold") {
     const gold = await Gold.findOne({ name: asset.name });
     namefirst = gold.name;
   }
@@ -612,6 +663,41 @@ const getPortfolioTypeDetails = asyncHandler(async (req, res) => {
   });
 });
 
+const updateBudget = asyncHandler(async (req, res) => {
+  const { value } = req.body;
+  if (!Number.isFinite(value) || value < 0) {
+    throw new customError(errorCodes.INVALID_BUDGET_VALUE);
+  }
+  const userId = req.user._id;
+  const budget = await Budget.findOneAndUpdate(
+    { createdBy: userId },
+    { totalValue: value },
+    { new: true }
+  );
+
+  if (!budget) {
+    throw new customError(errorCodes.BUDGET_NOT_FOUND);
+  }
+
+  return res.status(200).json({
+    status: "success",
+    message: "Bütçe başarıyla güncellendi.",
+  });
+});
+
+const getBudgetDetails = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+  const budget = await Budget.findOne({ createdBy: userId });
+  if (!budget) {
+    throw new customError(errorCodes.BUDGET_NOT_FOUND);
+  }
+  return res.status(200).json({
+    status: "success",
+    message: "Bütçe detayları başarıyla getirildi.",
+    budget,
+  });
+});
+
 module.exports = {
   getAllPortfolio,
   updatedPortfolio,
@@ -620,7 +706,10 @@ module.exports = {
   getAssetPercentages,
   createPortfolio,
   addAsset,
+  removeAsset,
   getAssetDetails,
   updateAsset,
-  getPortfolioTypeDetails
+  getPortfolioTypeDetails,
+  updateBudget,
+  getBudgetDetails,
 };

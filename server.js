@@ -9,6 +9,8 @@ const logger = require("morgan");
 const cookieParser = require("cookie-parser");
 const i18nextMiddleware = require('i18next-http-middleware');
 const i18next = require('./shared/i18next/i18nextConfig.js');
+const { errorHandler } = require("./shared/handlers/error/errorHandler.js");
+const { successHandler } = require("./shared/handlers/success/successHandlers.js");
 
 app.set('trust proxy', 1);
 
@@ -21,6 +23,9 @@ const connect = async () => {
   }
 };
 
+app.use(successHandler)
+
+
 const userRouter = require("./routes/userRoute.js");
 const authRouter = require("./routes/authRoute.js");
 const stockRouter = require("./routes/stockRoute.js");
@@ -28,8 +33,7 @@ const currencyRouter = require("./routes/currencyRoute.js");
 const goldRouter = require("./routes/goldRoute.js");
 const portfolioRouter = require("./routes/portfolioRoute.js");
 const fundRouter = require("./routes/fundRoute.js");
-const { errorHandler } = require("./shared/handlers/error/errorHandler.js");
-const { successHandler } = require("./shared/handlers/success/successHandlers.js");
+
 
 
 app.use(cookieParser());
@@ -49,7 +53,4 @@ app.listen(port, () => {
 });
 
 app.use(errorHandler)
-app.use(successHandler)
-
-
 

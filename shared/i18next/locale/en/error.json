@@ -11,6 +11,9 @@
     "PORTFOLIO_ALREADY_EXISTS":"A portfolio with this name already exists.",
     "MISSING_FIELD":"Please fill in all fields.",
     "INVALID_ASSET_TYPE":"Invalid asset type.",
-    "ASSET_NOT_FOUND":"Asset not found."
+    "ASSET_NOT_FOUND":"Asset not found.",
+    "BUDGET_INSUFFICIENT":"Budget is insufficient.",
+    "INVALID_BUDGET_VALUE":"Invalid budget value.",
+    "BUDGET_NOT_FOUND":"Budget not found."
 
 }

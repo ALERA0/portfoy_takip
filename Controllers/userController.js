@@ -4,9 +4,7 @@ const bcrypt = require("bcrypt");
 const Portfolio = require("../models/Portfolio");
 const { customError } = require("../shared/handlers/error/customError.js");
 const { errorCodes } = require("../shared/handlers/error/errorCodes.js");
-
-
-
+const Budget = require("../models/Budget.js");
 
 // @desc Get all users
 // @route GET /users
@@ -27,7 +25,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 // @route POST /users
 // @access Private
 const createNewUser = asyncHandler(async (req, res) => {
-  const { username, password, roles,email } = req.body;
+  const { username, password, roles, email } = req.body;
 
   // Confirm data
   if (!username || !password || !email) {
@@ -44,28 +42,25 @@ const createNewUser = asyncHandler(async (req, res) => {
   // Hash password
   const hashedPwd = await bcrypt.hash(password, 10); // salt rounds
 
-  const userObject = { username, password: hashedPwd, roles,email };
-
- 
+  const userObject = { username, password: hashedPwd, roles, email };
 
   // Create and store new user
   const user = await User.create(userObject);
 
-  
-
   if (user) {
     const defaultPortfolio = {
       name: "Portföy_1",
-      createdBy:user._id,
+      createdBy: user._id,
       portfolioDetails: [], // Boş bir portföy
     };
 
-   const portfolio =  await Portfolio.create(defaultPortfolio);
+    const portfolio = await Portfolio.create(defaultPortfolio);
+    await Budget.create({ createdBy: user._id, totalValue: 0 });
 
     res.status(201).json({
       status: "success",
       message: `New user ${username} created with a default portfolio`,
-      portfolioId: portfolio._id
+      portfolioId: portfolio._id,
     });
   } else {
     throw new customError(errorCodes.INVALID_USER_INFO);
@@ -76,7 +71,7 @@ const createNewUser = asyncHandler(async (req, res) => {
 // @route PATCH /users
 // @access Private
 const updateUser = asyncHandler(async (req, res) => {
-  const { id, username, roles, active, password, email} = req.body;
+  const { id, username, roles, active, password, email } = req.body;
 
   // Confirm data
   if (
