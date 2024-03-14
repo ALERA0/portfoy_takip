@@ -19,7 +19,7 @@ router.get("/add-crypto", async (req, res) => {
 });
 
 router.route("/getCryptoDetail/:name/:numberOfDays").get(cryptoController.getCryptoDetail);
-router.route("/searchCrypto/:searchParam?").get(cryptoController.searchCrypto);
+router.route("/searchCrypto/:searchParam?").post(cryptoController.searchCrypto);
 
 
 
