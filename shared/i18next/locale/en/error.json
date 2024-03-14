@@ -14,6 +14,7 @@
     "ASSET_NOT_FOUND":"Asset not found.",
     "BUDGET_INSUFFICIENT":"Budget is insufficient.",
     "INVALID_BUDGET_VALUE":"Invalid budget value.",
-    "BUDGET_NOT_FOUND":"Budget not found."
+    "BUDGET_NOT_FOUND":"Budget not found.",
+    "CRYPTO_NOT_FOUND":"Crypto not found."
 
 }

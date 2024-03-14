@@ -72,6 +72,10 @@ const errorCodes = {
   INVALID_BUDGET_VALUE:{
     code:StatusCodes.BAD_REQUEST,
     message:"INVALID_BUDGET_VALUE"
+  },
+  CRYPTO_NOT_FOUND:{
+    code:StatusCodes.NOT_FOUND,
+    message:"CRYPTO_NOT_FOUND"
   }
 };
 

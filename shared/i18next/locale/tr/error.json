@@ -16,5 +16,7 @@
     "ASSET_NOT_FOUND": "Varlık bulunamadı.",
     "BUDGET_INSUFFICIENT":"Bütçe yetersiz.",
     "INVALID_BUDGET_VALUE":"Geçersiz değer girdiniz.",
-    "BUDGET_NOT_FOUND":"Bütçe bulunamadı."
+    "BUDGET_NOT_FOUND":"Bütçe bulunamadı.",
+    "CRYPTO_NOT_FOUND":"Kripto para bulunamadı."
+
 }

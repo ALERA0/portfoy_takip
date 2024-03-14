@@ -346,10 +346,11 @@ const addAsset = asyncHandler(async (req, res) => {
 
   const budget = await Budget.findOne({ createdBy: req.user._id });
 
-  if (quantity * purchasePrice > budget.totalValue) {
+  const totalPurchaseValue = parseFloat(quantity * purchasePrice);
+  if (totalPurchaseValue > budget.totalValue) {
     throw new customError(errorCodes.BUDGET_INSUFFICIENT);
   } else {
-    budget.totalValue -= parseFloat(quantity * purchasePrice).toFixed(2);
+    budget.totalValue -= totalPurchaseValue.toFixed(2);
     await budget.save();
   }
 
@@ -430,11 +431,10 @@ const removeAsset = asyncHandler(async (req, res) => {
     (asset) => asset._id.toString() !== assetId
   );
 
-  console.log(assetToRemove);
   // Hesaplamaları yap
   const budget = await Budget.findOne({ createdBy: req.user._id });
-  budget.totalValue += assetToRemove.totalAssetValue;
-  budget.totalProfitValue += parseFloat(assetToRemove.profitValue);
+  budget.totalValue = (parseFloat(budget.totalValue) + parseFloat(assetToRemove.totalAssetValue)).toFixed(2);
+  budget.totalProfitValue = (parseFloat(budget.totalProfitValue) + parseFloat(assetToRemove.profitValue)).toFixed(2);
   await budget.save();
 
   // Güncellenmiş portföyü kaydet
