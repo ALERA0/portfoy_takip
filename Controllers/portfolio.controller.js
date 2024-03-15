@@ -14,6 +14,7 @@ const allowedTypes = [
   "Stock",
   "Gold",
   "Currency",
+  "TurkishLira",
   "Crypto",
   "Fund",
 ];
