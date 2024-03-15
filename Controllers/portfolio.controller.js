@@ -348,7 +348,10 @@ const addAsset = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.PORTFOLIO_NOT_FOUND);
   }
 
-  const budget = await Budget.findOne({ createdBy: req.user._id });
+  const budget = await Budget.findOne({
+    createdBy: req.user._id,
+    portfolioId: portfolioId,
+  });
 
   const totalPurchaseValue = parseFloat(quantity * purchasePrice);
   if (totalPurchaseValue > budget.totalValue) {
@@ -414,6 +417,7 @@ const addAsset = asyncHandler(async (req, res) => {
 
 const sellAsset = asyncHandler(async (req, res) => {
   const { portfolioId, assetId } = req.params;
+  const { quantity, sellingPrice } = req.body;
 
   // Portföyü bul
   const portfolio = await Portfolio.findById(portfolioId);
