@@ -318,6 +318,10 @@ const createPortfolio = asyncHandler(async (req, res) => {
     name: name,
     createdBy: createdBy,
   });
+  await Budget.create({
+    createdBy: req.user._id,
+    portfolioId: newPortfolio._id,
+  });
   res.status(201).json({
     status: "success",
     message: "Portfolio başarıyla oluşturuldu",
@@ -408,7 +412,7 @@ const addAsset = asyncHandler(async (req, res) => {
   });
 });
 
-const removeAsset = asyncHandler(async (req, res) => {
+const sellAsset = asyncHandler(async (req, res) => {
   const { portfolioId, assetId } = req.params;
 
   // Portföyü bul
@@ -433,8 +437,12 @@ const removeAsset = asyncHandler(async (req, res) => {
 
   // Hesaplamaları yap
   const budget = await Budget.findOne({ createdBy: req.user._id });
-  budget.totalValue = (parseFloat(budget.totalValue) + parseFloat(assetToRemove.totalAssetValue)).toFixed(2);
-  budget.totalProfitValue = (parseFloat(budget.totalProfitValue) + parseFloat(assetToRemove.profitValue)).toFixed(2);
+  budget.totalValue = (
+    parseFloat(budget.totalValue) + parseFloat(assetToRemove.totalAssetValue)
+  ).toFixed(2);
+  budget.totalProfitValue = (
+    parseFloat(budget.totalProfitValue) + parseFloat(assetToRemove.profitValue)
+  ).toFixed(2);
   await budget.save();
 
   // Güncellenmiş portföyü kaydet
@@ -663,21 +671,33 @@ const getPortfolioTypeDetails = asyncHandler(async (req, res) => {
   });
 });
 
-const updateBudget = asyncHandler(async (req, res) => {
+const addMoneyToBudget = asyncHandler(async (req, res) => {
   const { value } = req.body;
+  const { portfolioId } = req.params;
+  const userId = req.user._id;
+
   if (!Number.isFinite(value) || value < 0) {
     throw new customError(errorCodes.INVALID_BUDGET_VALUE);
   }
-  const userId = req.user._id;
-  const budget = await Budget.findOneAndUpdate(
-    { createdBy: userId },
-    { totalValue: value },
-    { new: true }
-  );
+  const budget = await Budget.findOne({
+    createdBy: userId,
+    portfolioId: portfolioId,
+  });
 
   if (!budget) {
     throw new customError(errorCodes.BUDGET_NOT_FOUND);
   }
+
+  budget.totalValue += value;
+
+  if (budget.totalProfitValue != 0) {
+    budget.totalProfitPercentage =
+      ((budget.totalValue - budget.totalProfitValue) /
+        budget.totalProfitValue) *
+      100;
+  }
+
+  await budget.save();
 
   return res.status(200).json({
     status: "success",
@@ -685,9 +705,53 @@ const updateBudget = asyncHandler(async (req, res) => {
   });
 });
 
+const decreaseMoneyFromBudget = asyncHandler(async (req, res) => {
+  const { value } = req.body;
+  const { portfolioId } = req.params;
+  const userId = req.user._id;
+
+  if (!Number.isFinite(value) || value < 0) {
+    throw new customError(errorCodes.INVALID_BUDGET_VALUE);
+  }
+
+  const budget = await Budget.findOne({
+    createdBy: userId,
+    portfolioId: portfolioId,
+  });
+
+  if (!budget) {
+    throw new customError(errorCodes.BUDGET_NOT_FOUND);
+  }
+
+  if (budget.totalValue < value) {
+    throw new customError(errorCodes.BUDGET_INSUFFICIENT);
+  }
+
+  const rate = budget.totalValue / budget.totalProfitValue;
+
+  budget.totalValue -= value;
+
+  if (budget.totalValue == 0) {
+    budget.totalProfitValue = 0;
+  }
+
+  budget.totalProfitValue = budget.totalValue * rate;
+
+  await budget.save();
+
+  return res.status(200).json({
+    status: "success",
+    message: "Bütçe'ye başarıyla para girişi sağlandı.",
+  });
+});
+
 const getBudgetDetails = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const budget = await Budget.findOne({ createdBy: userId });
+  const { portfolioId } = req.params;
+  const budget = await Budget.findOne({
+    createdBy: userId,
+    portfolioId: portfolioId,
+  });
   if (!budget) {
     throw new customError(errorCodes.BUDGET_NOT_FOUND);
   }
@@ -706,10 +770,11 @@ module.exports = {
   getAssetPercentages,
   createPortfolio,
   addAsset,
-  removeAsset,
+  sellAsset,
   getAssetDetails,
   updateAsset,
   getPortfolioTypeDetails,
-  updateBudget,
+  addMoneyToBudget,
+  decreaseMoneyFromBudget,
   getBudgetDetails,
 };

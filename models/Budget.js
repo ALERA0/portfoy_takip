@@ -6,6 +6,11 @@ const budgetSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  portfolioId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Portfolio",
+    required: true,
+  },
   totalValue:{
     type:Number,
     default:0

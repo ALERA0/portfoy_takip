@@ -55,7 +55,7 @@ const createNewUser = asyncHandler(async (req, res) => {
     };
 
     const portfolio = await Portfolio.create(defaultPortfolio);
-    await Budget.create({ createdBy: user._id, totalValue: 0 });
+    await Budget.create({ createdBy: user._id, portfolioId: portfolio._id });
 
     res.status(201).json({
       status: "success",

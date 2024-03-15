@@ -36,8 +36,10 @@ router.route("/updateAsset/:portfolioId/:assetId").put(portfolioController.updat
 
 router.route("/getPortfolioTypeDetails/:portfolioId/:type").get(portfolioController.getPortfolioTypeDetails);
 
-router.route("/updateBudget").put(portfolioController.updateBudget);
+router.route("/addMoneyToBudget/:portfolioId").post(portfolioController.addMoneyToBudget);
 
-router.route("/getBudget").get(portfolioController.getBudgetDetails);
+router.route("/decreaseMoneyFromBudget/:portfolioId").post(portfolioController.decreaseMoneyFromBudget);
+
+router.route("/getBudget/:portfolioId").get(portfolioController.getBudgetDetails);
 
 module.exports = router;
