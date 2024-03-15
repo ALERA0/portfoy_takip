@@ -57,26 +57,30 @@ const errorCodes = {
     code: StatusCodes.BAD_REQUEST,
     message: "INVALID_ASSET_TYPE",
   },
-  ASSET_NOT_FOUND:{
+  ASSET_NOT_FOUND: {
     code: StatusCodes.NOT_FOUND,
     message: "ASSET_NOT_FOUND",
   },
-  BUDGET_INSUFFICIENT:{
+  BUDGET_INSUFFICIENT: {
     code: StatusCodes.BAD_REQUEST,
     message: "BUDGET_INSUFFICIENT",
   },
-  BUDGET_NOT_FOUND:{
-    code:StatusCodes.NOT_FOUND,
-    message:"BUDGET_NOT_FOUND"
+  BUDGET_NOT_FOUND: {
+    code: StatusCodes.NOT_FOUND,
+    message: "BUDGET_NOT_FOUND",
   },
-  INVALID_BUDGET_VALUE:{
-    code:StatusCodes.BAD_REQUEST,
-    message:"INVALID_BUDGET_VALUE"
+  INVALID_BUDGET_VALUE: {
+    code: StatusCodes.BAD_REQUEST,
+    message: "INVALID_BUDGET_VALUE",
   },
-  CRYPTO_NOT_FOUND:{
-    code:StatusCodes.NOT_FOUND,
-    message:"CRYPTO_NOT_FOUND"
-  }
+  CRYPTO_NOT_FOUND: {
+    code: StatusCodes.NOT_FOUND,
+    message: "CRYPTO_NOT_FOUND",
+  },
+  INSUFFICIENT_ASSET_QUANTITY: {
+    code: StatusCodes.BAD_REQUEST,
+    message: "INSUFFICIENT_ASSET_QUANTITY",
+  },
 };
 
 module.exports = { errorCodes };

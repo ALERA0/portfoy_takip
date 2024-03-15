@@ -14,7 +14,6 @@ const allowedTypes = [
   "Stock",
   "Gold",
   "Currency",
-  "TurkishLira",
   "Crypto",
   "Fund",
 ];
@@ -419,14 +418,22 @@ const sellAsset = asyncHandler(async (req, res) => {
   const { portfolioId, assetId } = req.params;
   const { quantity, sellingPrice } = req.body;
 
-  // Portföyü bul
+  // Portföyü ve bütçeyi bul
   const portfolio = await Portfolio.findById(portfolioId);
+  const budget = await Budget.findOne({
+    createdBy: req.user._id,
+    portfolioId: portfolioId,
+  });
 
   if (!portfolio) {
     throw new customError(errorCodes.PORTFOLIO_NOT_FOUND);
   }
 
-  // Varlığı bul ve kaldır
+  if (!budget) {
+    throw new customError(errorCodes.BUDGET_NOT_FOUND);
+  }
+
+  // Satılacak varlığı bul ve kaldır
   const assetToRemove = portfolio.portfolioDetails.find(
     (asset) => asset._id.toString() === assetId
   );
@@ -435,32 +442,39 @@ const sellAsset = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.ASSET_NOT_FOUND);
   }
 
-  const updatedPortfolioDetails = portfolio.portfolioDetails.filter(
-    (asset) => asset._id.toString() !== assetId
-  );
+  if (quantity > assetToRemove.quantity) {
+    throw new customError(errorCodes.INSUFFICIENT_ASSET_QUANTITY);
+  }
 
-  // Hesaplamaları yap
-  const budget = await Budget.findOne({ createdBy: req.user._id });
-  budget.totalValue = (
-    parseFloat(budget.totalValue) + parseFloat(assetToRemove.totalAssetValue)
-  ).toFixed(2);
-  budget.totalProfitValue = (
-    parseFloat(budget.totalProfitValue) + parseFloat(assetToRemove.profitValue)
-  ).toFixed(2);
+  // Satış fiyatından geliri hesapla
+  const income = quantity * sellingPrice;
+
+  // Bütçeyi güncelle
+  budget.totalValue += income;
+  budget.totalProfitValue += (sellingPrice - assetToRemove.purchasePrice) * quantity;
+
+  // Varlığı portföyden düşür
+  if (quantity === assetToRemove.quantity) {
+    portfolio.portfolioDetails = portfolio.portfolioDetails.filter(
+      (asset) => asset._id.toString() !== assetId
+    );
+  } else {
+    assetToRemove.quantity -= quantity;
+  }
+
+  // Portföyü kaydet
+  await portfolio.save();
+
+  // Bütçeyi kaydet
   await budget.save();
-
-  // Güncellenmiş portföyü kaydet
-  await Portfolio.findByIdAndUpdate(
-    portfolioId,
-    { portfolioDetails: updatedPortfolioDetails },
-    { new: true }
-  );
 
   res.status(200).json({
     status: "success",
-    message: "Varlık portfoyunuzden başarıyla çıkarıldı.",
+    message: "Varlık portföyünüzden başarıyla satıldı.",
   });
 });
+
+
 
 const getAssetDetails = asyncHandler(async (req, res) => {
   const { portfolioId, assetId, type, name, numberOfDays } = req.body;
