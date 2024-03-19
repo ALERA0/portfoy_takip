@@ -1,3 +1,12 @@
 {
-  "LOGIN_SUCCESS": "Logged in successfully"
+  "LOGIN_SUCCESS": "Logged in successfully",
+  "STOCKS_SUCCESS": "Stocks fetched successfully",
+  "CRYPTO_DETAIL_SUCCESS": "Crypto detail fetched successfully",
+  "CRYPTO_SEARCH_SUCCESS": "Crypto search fetched successfully",
+  "CURRENCY_DETAIL_SUCCESS":"Currency detail fetched successfully",
+  "CURRENCY_SEARCH_SUCCESS":"Currency search fetched successfully",
+  "FUND_DETAIL_SUCCESS":"Fund detail fetched successfully",
+  "FUND_SEARCH_SUCCESS":"Fund search fetched successfully",
+  "GOLD_DETAIL_SUCCESS":"Gold detail fetched successfully",
+  "GOLD_SEARCH_SUCCESS":"Gold search fetched successfully"
 }

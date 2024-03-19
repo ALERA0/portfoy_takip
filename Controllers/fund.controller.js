@@ -3,6 +3,10 @@ const Fund = require("../models/Fund");
 const { customError } = require("../shared/handlers/error/customError");
 const { errorCodes } = require("../shared/handlers/error/errorCodes");
 const redisClient = require("../shared/redis.js")();
+const {
+  customSuccess,
+} = require("../shared/handlers/success/customSuccess.js");
+const { successCodes } = require("../shared/handlers/success/successCodes.js");
 
 const getFundDetail = asyncHandler(async (req, res) => {
   const { name, numberOfDays } = req.params;
@@ -31,15 +35,15 @@ const getFundDetail = asyncHandler(async (req, res) => {
 
   // Name ve Desc alanlarını ayarlayın
 
-  res.status(200).json({
-    status: "success",
-    message: "Fon detayı başarıyla getirildi",
+  const successResponse = new customSuccess(successCodes.FUND_DETAIL_SUCCESS, {
     desc: fundInfo.desc,
     name: fundInfo.name,
     lastPrice: fundInfo.lastPrice,
     changePercent: fundInfo.changePercent,
     data: formattedData,
   });
+
+  res.json(successResponse);
 });
 
 const searchFund = asyncHandler(async (req, res) => {
@@ -59,11 +63,15 @@ const searchFund = asyncHandler(async (req, res) => {
     const cachedFund = await redisClient.get("fundData");
     if (cachedFund) {
       // Redis'teki veriyi döndür
-      return res.status(200).json({
-        status: "success",
-        message: "Fonlar Redis'ten başarıyla getirildi",
-        data: JSON.parse(cachedFund),
-      });
+
+      const successResponse = new customSuccess(
+        successCodes.FUND_SEARCH_SUCCESS,
+        {
+          data: JSON.parse(cachedFund),
+        }
+      );
+
+      res.json(successResponse);
     } else {
       const data = await Fund.find(query).skip(skip).limit(limit);
       const formattedData = data.map((fund) => ({
@@ -80,11 +88,14 @@ const searchFund = asyncHandler(async (req, res) => {
         24 * 60 * 60
       );
 
-      return res.status(200).json({
-        status: "success",
-        message: "Fonlar başarıyla getirildi",
-        data: formattedData,
-      });
+      const successResponse = new customSuccess(
+        successCodes.FUND_SEARCH_SUCCESS,
+        {
+          data: formattedData,
+        }
+      );
+
+      res.json(successResponse);
     }
   }
 
@@ -100,11 +111,11 @@ const searchFund = asyncHandler(async (req, res) => {
     changePercent: parseFloat(fund.changePercent.replace(",", ".")).toFixed(2),
   }));
 
-  res.status(200).json({
-    status: "success",
-    message: "Fonlar başarıyla getirildi",
+  const successResponse = new customSuccess(successCodes.FUND_SEARCH_SUCCESS, {
     data: formattedData,
   });
+
+  res.json(successResponse);
 });
 
 module.exports = { getFundDetail, searchFund };

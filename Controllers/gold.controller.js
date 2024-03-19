@@ -3,6 +3,10 @@ const Gold = require("../models/Gold");
 const { customError } = require("../shared/handlers/error/customError");
 const { errorCodes } = require("../shared/handlers/error/errorCodes");
 const redisClient = require("../shared/redis.js")();
+const {
+  customSuccess,
+} = require("../shared/handlers/success/customSuccess.js");
+const { successCodes } = require("../shared/handlers/success/successCodes.js");
 
 const getGoldDetail = asyncHandler(async (req, res) => {
   const { name, day } = req.body;
@@ -25,15 +29,14 @@ const getGoldDetail = asyncHandler(async (req, res) => {
         : null,
   }));
 
-  const responseData = {
-    status: "success",
-    message: "Altın / Gümüş detayı başarıyla getirildi",
+  const successResponse = new customSuccess(successCodes.GOLD_DETAIL_SUCCESS, {
     name: goldName.name,
     fullName: goldName.name,
     lastPrice: parseFloat(goldName.lastPrice),
     data: formattedData,
-  };
-  res.status(200).json(responseData);
+  });
+
+  res.json(successResponse);
 });
 
 const searchGold = asyncHandler(async (req, res) => {
@@ -50,15 +53,22 @@ const searchGold = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  if ((searchParam === undefined || searchParam === null || searchParam === "") && page === 1) {
+  if (
+    (searchParam === undefined || searchParam === null || searchParam === "") &&
+    page === 1
+  ) {
     const cachedGold = await redisClient.get("goldData");
     if (cachedGold) {
       // Redis'teki veriyi döndür
-      return res.status(200).json({
-        status: "success",
-        message: "Altınlar Redis'ten başarıyla getirildi",
-        data: JSON.parse(cachedGold),
-      });
+
+      const successResponse = new customSuccess(
+        successCodes.GOLD_SEARCH_SUCCESS,
+        {
+          data: JSON.parse(cachedGold),
+        }
+      );
+
+      res.json(successResponse);
     } else {
       const data = await Gold.find(query).skip(skip).limit(limit);
       const formattedData = data.map((currency) => ({
@@ -71,11 +81,15 @@ const searchGold = asyncHandler(async (req, res) => {
         "EX",
         24 * 60 * 60
       );
-      return res.status(200).json({
-        status: "success",
-        message: "Altınlar başarıyla getirildi",
-        data: formattedData,
-      });
+
+      const successResponse = new customSuccess(
+        successCodes.GOLD_SEARCH_SUCCESS,
+        {
+          data: formattedData,
+        }
+      );
+
+      res.json(successResponse);
     }
   }
 
@@ -87,11 +101,12 @@ const searchGold = asyncHandler(async (req, res) => {
     ...currency.toObject(),
     changePercent: currency.changePercent.replace("%", ""),
   }));
-  res.status(200).json({
-    status: "success",
-    message: "Altın / Gümüş verisi başarıyla getirildi",
+
+  const successResponse = new customSuccess(successCodes.GOLD_SEARCH_SUCCESS, {
     data: formattedData,
   });
+
+  res.json(successResponse);
 });
 
 module.exports = { getGoldDetail, searchGold };

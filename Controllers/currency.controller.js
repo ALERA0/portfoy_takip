@@ -3,6 +3,10 @@ const Currency = require("../models/Currency");
 const { errorCodes } = require("../shared/handlers/error/errorCodes.js");
 const { customError } = require("../shared/handlers/error/customError.js");
 const redisClient = require("../shared/redis.js")();
+const {
+  customSuccess,
+} = require("../shared/handlers/success/customSuccess.js");
+const { successCodes } = require("../shared/handlers/success/successCodes.js");
 
 const getCurrencyDetail = asyncHandler(async (req, res) => {
   const { name, numberOfDays } = req.params;
@@ -27,15 +31,17 @@ const getCurrencyDetail = asyncHandler(async (req, res) => {
         ? item.addedDate.toISOString().split("T")[0]
         : null,
   }));
+  const successResponse = new customSuccess(
+    successCodes.CURRENCY_DETAIL_SUCCESS,
+    {
+      name: currencyName.name,
+      lastPrice: parseFloat(currencyName.lastPrice.replace(",", ".")),
+      description: currencyName.desc,
+      data: formattedData,
+    }
+  );
 
-  res.status(200).json({
-    status: "success",
-    message: "Döviz detayı başarıyla getirildi",
-    name: currencyName.name,
-    lastPrice: parseFloat(currencyName.lastPrice.replace(",", ".")),
-    description: currencyName.desc,
-    data: formattedData,
-  });
+  res.json(successResponse);
 });
 
 const searchCurrency = asyncHandler(async (req, res) => {
@@ -55,11 +61,14 @@ const searchCurrency = asyncHandler(async (req, res) => {
     const cachedCurrency = await redisClient.get("currencyData");
     if (cachedCurrency) {
       // Redis'teki veriyi döndür
-      return res.status(200).json({
-        status: "success",
-        message: "Dövizler Redis'ten başarıyla getirildi",
-        data: JSON.parse(cachedCurrency),
-      });
+      const successResponse = new customSuccess(
+        successCodes.CURRENCY_SEARCH_SUCCESS,
+        {
+          data: JSON.parse(cachedCurrency),
+        }
+      );
+
+      res.json(successResponse);
     } else {
       const data = await Currency.find(query).skip(skip).limit(limit);
       const formattedData = data.map((currency) => ({
@@ -74,11 +83,14 @@ const searchCurrency = asyncHandler(async (req, res) => {
         24 * 60 * 60
       );
 
-      return res.status(200).json({
-        status: "success",
-        message: "Dövizler başarıyla getirildi",
-        data: formattedData,
-      });
+      const successResponse = new customSuccess(
+        successCodes.CURRENCY_SEARCH_SUCCESS,
+        {
+          data: formattedData,
+        }
+      );
+
+      res.json(successResponse);
     }
   }
 
@@ -94,11 +106,14 @@ const searchCurrency = asyncHandler(async (req, res) => {
     changePercent: currency.changePercent.replace("%", ""),
   }));
 
-  res.status(200).json({
-    status: "success",
-    message: "Dövizler başarıyla getirildi",
-    data: formattedData,
-  });
+  const successResponse = new customSuccess(
+    successCodes.CURRENCY_SEARCH_SUCCESS,
+    {
+      data: formattedData,
+    }
+  );
+
+  res.json(successResponse);
 });
 
 module.exports = { getCurrencyDetail, searchCurrency };

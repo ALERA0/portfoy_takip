@@ -3,13 +3,16 @@ const Crypto = require("../models/Crypto");
 const { errorCodes } = require("../shared/handlers/error/errorCodes.js");
 const { customError } = require("../shared/handlers/error/customError.js");
 const redisClient = require("../shared/redis.js")();
-
+const {
+  customSuccess,
+} = require("../shared/handlers/success/customSuccess.js");
+const { successCodes } = require("../shared/handlers/success/successCodes.js");
 
 const getCryptoDetail = asyncHandler(async (req, res) => {
   const { name, numberOfDays } = req.params;
 
   const cryptoName = await Crypto.findOne({
-    name:name
+    name: name,
   }).sort({ addedDate: -1 });
 
   if (!cryptoName) {
@@ -29,14 +32,17 @@ const getCryptoDetail = asyncHandler(async (req, res) => {
         : null,
   }));
 
-  res.status(200).json({
-    status: "success",
-    message: "Crypto detail successfully retrieved",
-    name: cryptoName.name,
-    lastPrice: cryptoName.lastPrice,
-    description: cryptoName.desc,
-    data: formattedData,
-  });
+  const successResponse = new customSuccess(
+    successCodes.CRYPTO_DETAIL_SUCCESS,
+    {
+      name: cryptoName.name,
+      lastPrice: cryptoName.lastPrice,
+      description: cryptoName.desc,
+      data: formattedData,
+    }
+  );
+
+  res.json(successResponse);
 });
 
 const searchCrypto = asyncHandler(async (req, res) => {
@@ -56,11 +62,15 @@ const searchCrypto = asyncHandler(async (req, res) => {
     const cachedCrypto = await redisClient.get("cryptoData");
     if (cachedCrypto) {
       // Return the data from Redis
-      return res.status(200).json({
-        status: "success",
-        message: "Cryptos successfully retrieved from Redis",
-        data: JSON.parse(cachedCrypto),
-      });
+
+      const successResponse = new customSuccess(
+        successCodes.CRYPTO_SEARCH_SUCCESS,
+        {
+          data: JSON.parse(cachedCrypto),
+        }
+      );
+
+      res.json(successResponse);
     }
 
     // Get the cryptos added today
@@ -74,11 +84,14 @@ const searchCrypto = asyncHandler(async (req, res) => {
       24 * 60 * 60
     ); // 1 hour TTL
 
-    res.status(200).json({
-      status: "success",
-      message: "Cryptos successfully retrieved",
-      data,
-    });
+    const successResponse = new customSuccess(
+      successCodes.CRYPTO_SEARCH_SUCCESS,
+      {
+        data: data,
+      }
+    );
+
+    res.json(successResponse);
   } else {
     // Search for the cryptos
     query = {
@@ -87,15 +100,18 @@ const searchCrypto = asyncHandler(async (req, res) => {
 
     const data = await Crypto.find(query).skip(skip).limit(limit);
 
-    res.status(200).json({
-      status: "success",
-      message: "Cryptos successfully retrieved",
-      data,
-    });
+    const successResponse = new customSuccess(
+      successCodes.CRYPTO_SEARCH_SUCCESS,
+      {
+        data: data,
+      }
+    );
+
+    res.json(successResponse);
   }
 });
 
 module.exports = {
   getCryptoDetail,
-  searchCrypto
+  searchCrypto,
 };

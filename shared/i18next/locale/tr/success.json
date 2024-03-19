@@ -1,3 +1,12 @@
 {
-  "LOGIN_SUCCESS": "Logged in başarıııııı"
+  "LOGIN_SUCCESS": "Logged in başarıııııı",
+  "STOCKS_SUCCESS":"Stock verisi başarıyla getirildi",
+  "CRYPTO_DETAIL_SUCCESS":"Crypto detayları başarıyla getirildi",
+  "CRYPTO_SEARCH_SUCCESS":"Crypto arama başarıyla getirildi",
+  "CURRENCY_DETAIL_SUCCESS":"Currency detayları başarıyla getirildi",
+  "CURRENCY_SEARCH_SUCCESS":"Currency arama başarıyla getirildi",
+  "FUND_DETAIL_SUCCESS":"Fund detayları başarıyla getirildi",
+  "FUND_SEARCH_SUCCESS":"Fund arama başarıyla getirildi",
+  "GOLD_DETAIL_SUCCESS":"Altın detayları başarıyla getirildi",
+  "GOLD_SEARCH_SUCCESS":"Altın arama başarıyla getirildi"
 }

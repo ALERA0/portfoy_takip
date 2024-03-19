@@ -9,6 +9,10 @@ const Stock = require("../models/Stock");
 const randomColor = require("randomcolor");
 const Budget = require("../models/Budget");
 const PortfolioDetail = require("../models/PortfolioDetail");
+const {
+  customSuccess,
+} = require("../shared/handlers/success/customSuccess.js");
+const { successCodes } = require("../shared/handlers/success/successCodes.js");
 
 const allowedTypes = [
   "Stock",

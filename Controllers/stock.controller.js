@@ -3,6 +3,10 @@ const Stock = require("../models/Stock");
 const { customError } = require("../shared/handlers/error/customError");
 const { errorCodes } = require("../shared/handlers/error/errorCodes");
 const redisClient = require("../shared/redis.js")();
+const {
+  customSuccess,
+} = require("../shared/handlers/success/customSuccess.js");
+const { successCodes } = require("../shared/handlers/success/successCodes.js");
 
 const getStockDetail = asyncHandler(async (req, res) => {
   const { name, numberOfDays } = req.params;
@@ -64,11 +68,11 @@ const searchStock = asyncHandler(async (req, res) => {
     const cachedStocks = await redisClient.get("stockData");
     if (cachedStocks) {
       // Redis'teki veriyi döndür
-      return res.status(200).json({
-        status: "success",
-        message: "Hisseler Redis'ten başarıyla getirildi",
+      const successResponse = new customSuccess(successCodes.STOCKS_SUCCESS, {
         data: JSON.parse(cachedStocks),
       });
+      return res.json(successResponse);
+      
     } else {
       const data = await Stock.find(query).skip(skip).limit(limit);
       // Response formatını güncelle
@@ -92,11 +96,15 @@ const searchStock = asyncHandler(async (req, res) => {
         "EX",
         24 * 60 * 60
       );
-      return res.status(200).json({
-        status: "success",
-        message: "Hisseler başarıyla getirildi",
+      // return res.status(200).json({
+      //   status: "success",
+      //   message: "Hisseler başarıyla getirildi",
+      //   data: formattedData,
+      // });
+      const successResponse = new customSuccess(successCodes.STOCKS_SUCCESS, {
         data: formattedData,
       });
+      return res.json(successResponse);
     }
   }
 
