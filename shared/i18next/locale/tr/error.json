@@ -17,6 +17,6 @@
     "BUDGET_INSUFFICIENT":"Bütçe yetersiz.",
     "INVALID_BUDGET_VALUE":"Geçersiz değer girdiniz.",
     "BUDGET_NOT_FOUND":"Bütçe bulunamadı.",
-    "CRYPTO_NOT_FOUND":"Kripto para bulunamadı."
-
+    "CRYPTO_NOT_FOUND":"Kripto para bulunamadı.",
+    "PORTFOLIO_LENGTH_ERROR":"Hesabınızda en az bir potrföy bulunmalıdır."
 }

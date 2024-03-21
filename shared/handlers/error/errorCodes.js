@@ -81,6 +81,10 @@ const errorCodes = {
     code: StatusCodes.BAD_REQUEST,
     message: "INSUFFICIENT_ASSET_QUANTITY",
   },
+  PORTFOLIO_LENGTH_ERROR:{
+    code: StatusCodes.BAD_REQUEST,
+    message: "PORTFOLIO_LENGTH_ERROR",
+  }
 };
 
 module.exports = { errorCodes };

@@ -8,5 +8,19 @@
   "FUND_DETAIL_SUCCESS":"Fund detayları başarıyla getirildi",
   "FUND_SEARCH_SUCCESS":"Fund arama başarıyla getirildi",
   "GOLD_DETAIL_SUCCESS":"Altın detayları başarıyla getirildi",
-  "GOLD_SEARCH_SUCCESS":"Altın arama başarıyla getirildi"
+  "GOLD_SEARCH_SUCCESS":"Altın arama başarıyla getirildi",
+  "PORTFOLIO_LIST_SUCCESS":"Portföy listesi başarıyla getirildi",
+  "PORTFOLIO_UPDATED_SUCCESS":"Portföy başarıyla güncellendi",
+  "PORTFOLIO_DELETED_SUCCESS":"Portföy başarıyla silindi",
+  "PORTFOLIO_DETAILS_SUCCESS":"Portföy detayları başarıyla getirildi",
+  "PORTFOLIO_ASSETS_SUCCESS":"Portföy varlıkları başarıyla getirildi",
+  "PORTFOLIO_CREATED_SUCCESS":"Portföy başarıyla oluşturuldu",
+  "ASSET_ADDED_SUCCESS":"Varlık başarıyla eklendi",
+  "ASSET_SELL_SUCCESS":"Varlık başarıyla satıldı",
+  "ASSET_DETAIL_SUCCESS":"Varlık detayları başarıyla getirildi",
+  "PORTFOLIO_ASSETS_EMPTY_SUCCESS":"Portföyde bu türde varlık bulunmamaktadır.",
+  "ADD_MONET_TO_BUDGET_SUCCESS":"Bütçeye para başarıyla eklendi",
+  "DECREASE_MONET_FROM_BUDGET_SUCCESS":"Bütçeden para başarıyla çıkarıldı",
+  "BUDGET_DETAILS_SUCCESS":"Bütçe detayları başarıyla getirildi",
+  "USER_CREATED":"Kullanıcı başarıyla oluşturuldu"
 }

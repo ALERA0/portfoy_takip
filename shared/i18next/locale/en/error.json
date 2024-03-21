@@ -16,6 +16,6 @@
     "INVALID_BUDGET_VALUE":"Invalid budget value.",
     "BUDGET_NOT_FOUND":"Budget not found.",
     "CRYPTO_NOT_FOUND":"Crypto not found.",
-    "INSUFFICIENT_ASSET_QUANTITY":"Insufficient asset quantity."
-
+    "INSUFFICIENT_ASSET_QUANTITY":"Insufficient asset quantity.",
+    "PORTFOLIO_LENGTH_ERROR":"You must have at least one portfolio in your account."
 }

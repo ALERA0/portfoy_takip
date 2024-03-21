@@ -5,6 +5,10 @@ const Portfolio = require("../models/Portfolio");
 const { customError } = require("../shared/handlers/error/customError.js");
 const { errorCodes } = require("../shared/handlers/error/errorCodes.js");
 const Budget = require("../models/Budget.js");
+const {
+  customSuccess,
+} = require("../shared/handlers/success/customSuccess.js");
+const { successCodes } = require("../shared/handlers/success/successCodes.js");
 
 // @desc Get all users
 // @route GET /users
@@ -56,6 +60,12 @@ const createNewUser = asyncHandler(async (req, res) => {
 
     const portfolio = await Portfolio.create(defaultPortfolio);
     await Budget.create({ createdBy: user._id, portfolioId: portfolio._id });
+
+    const successResponse = new customSuccess(successCodes.USER_CREATED, {
+      portfolioId: portfolio._id,
+    });
+
+    res.json(successResponse);
 
     res.status(201).json({
       status: "success",

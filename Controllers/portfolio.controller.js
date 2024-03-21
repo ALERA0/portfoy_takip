@@ -41,11 +41,15 @@ const getAllPortfolio = asyncHandler(async (req, res) => {
   const portfolios = await Portfolio.find({ createdBy: req.user._id }).select(
     "-portfolioDetails"
   );
-  res.status(200).json({
-    status: "success",
-    message: "Portfolio listesi başarıyla getirildi",
-    portfolios,
-  });
+
+  const successResponse = new customSuccess(
+    successCodes.PORTFOLIO_LIST_SUCCESS,
+    {
+      portfolios,
+    }
+  );
+
+  res.json(successResponse);
 });
 
 const updatedPortfolio = asyncHandler(async (req, res) => {
@@ -66,10 +70,11 @@ const updatedPortfolio = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.PORTFOLIO_NOT_FOUND);
   }
 
-  res.status(200).json({
-    status: "success",
-    message: "Portfolio başarıyla güncellendi",
-  });
+  const successResponse = new customSuccess(
+    successCodes.PORTFOLIO_UPDATED_SUCCESS
+  );
+
+  res.json(successResponse);
 });
 
 const deletePortfolio = asyncHandler(async (req, res) => {
@@ -78,20 +83,19 @@ const deletePortfolio = asyncHandler(async (req, res) => {
 
   const portfolios = await Portfolio.find({ createdBy: userId });
   if (portfolios.length === 1) {
-    return res.status(400).json({
-      status: "error",
-      message: "Hesabınızda en az bir portföy bulunmalıdır.",
-    });
+    throw new customError(errorCodes.PORTFOLIO_LENGTH_ERROR);
   }
 
   const portfolio = await Portfolio.findByIdAndDelete(portfolioId);
   if (!portfolio) {
     throw new customError(errorCodes.PORTFOLIO_NOT_FOUND);
   }
-  res.status(200).json({
-    status: "success",
-    message: "Portfolio başarıyla silindi",
-  });
+
+  const successResponse = new customSuccess(
+    successCodes.PORTFOLIO_DELETED_SUCCESS
+  );
+
+  res.json(successResponse);
 });
 
 const getPortfolioDetails = asyncHandler(async (req, res) => {
@@ -248,17 +252,21 @@ const getPortfolioDetails = asyncHandler(async (req, res) => {
     }
     return group;
   });
-  res.status(200).json({
-    status: "success",
-    message: "Portfolio detayları başarıyla getirildi",
-    portfolio: {
-      ...updatedPortfolio.toObject(),
-      // totalValue,
-      // fitStatus: formattedFitStatus,
-      portfolioDetails: truncatedPortfolioDetails,
-    },
-    distribution: adjustedDistribution,
-  });
+
+  const successResponse = new customSuccess(
+    successCodes.PORTFOLIO_DETAILS_SUCCESS,
+    {
+      portfolio: {
+        ...updatedPortfolio.toObject(),
+        // totalValue,
+        // fitStatus: formattedFitStatus,
+        portfolioDetails: truncatedPortfolioDetails,
+      },
+      distribution: adjustedDistribution,
+    }
+  );
+
+  res.json(successResponse);
 });
 
 const getAssetPercentages = asyncHandler(async (req, res) => {
@@ -295,11 +303,14 @@ const getAssetPercentages = asyncHandler(async (req, res) => {
     ),
   }));
 
-  res.status(200).json({
-    status: "success",
-    message: `${assetType} varlık yüzdeleri başarıyla getirildi.`,
-    assetPercentages,
-  });
+  const successResponse = new customSuccess(
+    successCodes.PORTFOLIO_ASSETS_SUCCESS,
+    {
+      assetPercentages,
+    }
+  );
+
+  res.json(successResponse);
 });
 
 const createPortfolio = asyncHandler(async (req, res) => {
@@ -326,11 +337,12 @@ const createPortfolio = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
     portfolioId: newPortfolio._id,
   });
-  res.status(201).json({
-    status: "success",
-    message: "Portfolio başarıyla oluşturuldu",
-    newPortfolio,
-  });
+
+  const successResponse = new customSuccess(
+    successCodes.PORTFOLIO_CREATED_SUCCESS
+  );
+
+  res.json(successResponse);
 });
 
 const addAsset = asyncHandler(async (req, res) => {
@@ -390,11 +402,9 @@ const addAsset = asyncHandler(async (req, res) => {
 
     await portfolio.save();
 
-    return res.status(200).json({
-      status: "success",
-      message: "Existing portfolio detail successfully updated.",
-      updatedPortfolioDetail: existingAsset,
-    });
+    const successResponse = new customSuccess(successCodes.ASSET_ADDED_SUCCESS);
+
+    res.json(successResponse);
   }
 
   // Büyük harfe çevir
@@ -412,11 +422,9 @@ const addAsset = asyncHandler(async (req, res) => {
 
   await portfolio.save();
 
-  res.status(201).json({
-    status: "success",
-    message: "Portfolio detail successfully added.",
-    newPortfolioDetail,
-  });
+  const successResponse = new customSuccess(successCodes.ASSET_ADDED_SUCCESS);
+
+  res.json(successResponse);
 });
 
 const sellAsset = asyncHandler(async (req, res) => {
@@ -456,7 +464,8 @@ const sellAsset = asyncHandler(async (req, res) => {
 
   // Bütçeyi güncelle
   budget.totalValue += income;
-  budget.totalProfitValue += (sellingPrice - assetToRemove.purchasePrice) * quantity;
+  budget.totalProfitValue +=
+    (sellingPrice - assetToRemove.purchasePrice) * quantity;
 
   // Varlığı portföyden düşür
   if (quantity === assetToRemove.quantity) {
@@ -473,13 +482,10 @@ const sellAsset = asyncHandler(async (req, res) => {
   // Bütçeyi kaydet
   await budget.save();
 
-  res.status(200).json({
-    status: "success",
-    message: "Varlık portföyünüzden başarıyla satıldı.",
-  });
+  const successResponse = new customSuccess(successCodes.ASSET_SELL_SUCCESS);
+
+  res.json(successResponse);
 });
-
-
 
 const getAssetDetails = asyncHandler(async (req, res) => {
   const { portfolioId, assetId, type, name, numberOfDays } = req.body;
@@ -559,10 +565,7 @@ const getAssetDetails = asyncHandler(async (req, res) => {
     namefirst = gold.name;
   }
 
-  res.status(200).json({
-    status: "success",
-    message: "Asset detayları başarıyla getirildi",
-    portfolioId: portfolio._id,
+  const successResponse = new customSuccess(successCodes.ASSET_DETAIL_SUCCESS, {
     assetDetails: {
       fullName: asset.name,
       name: namefirst ? namefirst : "",
@@ -577,6 +580,8 @@ const getAssetDetails = asyncHandler(async (req, res) => {
     },
     historicalData: formattedHistoricalData,
   });
+
+  res.json(successResponse);
 });
 
 const updateAsset = asyncHandler(async (req, res) => {
@@ -634,16 +639,19 @@ const getPortfolioTypeDetails = asyncHandler(async (req, res) => {
   );
 
   if (filteredAssets.length === 0) {
-    return res.status(200).json({
-      status: "error",
-      message: `No assets found for the type: ${type} in the portfolio.`,
-      type: type,
-      totalAssets: 0,
-      totalValue: 0,
-      totalProfitPercentage: 0,
-      totalProfitValue: 0,
-      assets: [],
-    });
+    const successResponse = new customSuccess(
+      successCodes.PORTFOLIO_ASSETS_EMPTY_SUCCESS,
+      {
+        type: type,
+        totalAssets: 0,
+        totalValue: 0,
+        totalProfitPercentage: 0,
+        totalProfitValue: 0,
+        assets: [],
+      }
+    );
+
+    res.json(successResponse);
   }
 
   const totalAssets = filteredAssets.length;
@@ -682,16 +690,19 @@ const getPortfolioTypeDetails = asyncHandler(async (req, res) => {
     };
   });
 
-  res.status(200).json({
-    status: "success",
-    message: `Details for ${type} assets in the portfolio successfully retrieved.`,
-    type: filteredAssets[0].type,
-    totalAssets,
-    totalValue: parseFloat(totalValue.toFixed(2)),
-    totalProfitPercentage: parseFloat(totalProfitPercentage.toFixed(2)),
-    totalProfitValue: parseFloat(totalProfitValue.toFixed(2)),
-    assets: assetsWithPercentage,
-  });
+  const successResponse = new customSuccess(
+    successCodes.PORTFOLIO_ASSETS_SUCCESS,
+    {
+      type: filteredAssets[0].type,
+      totalAssets,
+      totalValue: parseFloat(totalValue.toFixed(2)),
+      totalProfitPercentage: parseFloat(totalProfitPercentage.toFixed(2)),
+      totalProfitValue: parseFloat(totalProfitValue.toFixed(2)),
+      assets: assetsWithPercentage,
+    }
+  );
+
+  res.json(successResponse);
 });
 
 const addMoneyToBudget = asyncHandler(async (req, res) => {
@@ -722,10 +733,11 @@ const addMoneyToBudget = asyncHandler(async (req, res) => {
 
   await budget.save();
 
-  return res.status(200).json({
-    status: "success",
-    message: "Bütçe başarıyla güncellendi.",
-  });
+  const successResponse = new customSuccess(
+    successCodes.ADD_MONET_TO_BUDGET_SUCCESS
+  );
+
+  res.json(successResponse);
 });
 
 const decreaseMoneyFromBudget = asyncHandler(async (req, res) => {
@@ -762,10 +774,11 @@ const decreaseMoneyFromBudget = asyncHandler(async (req, res) => {
 
   await budget.save();
 
-  return res.status(200).json({
-    status: "success",
-    message: "Bütçe'ye başarıyla para girişi sağlandı.",
-  });
+  const successResponse = new customSuccess(
+    successCodes.DECREASE_MONET_FROM_BUDGET_SUCCESS
+  );
+
+  res.json(successResponse);
 });
 
 const getBudgetDetails = asyncHandler(async (req, res) => {
@@ -778,11 +791,16 @@ const getBudgetDetails = asyncHandler(async (req, res) => {
   if (!budget) {
     throw new customError(errorCodes.BUDGET_NOT_FOUND);
   }
-  return res.status(200).json({
-    status: "success",
-    message: "Bütçe detayları başarıyla getirildi.",
-    budget,
-  });
+  const successResponse = new customSuccess(
+    successCodes.BUDGET_DETAILS_SUCCESS,
+    {
+      budget,
+    }
+  );
+
+  res.json(successResponse);
+
+
 });
 
 module.exports = {

@@ -40,15 +40,17 @@ const getStockDetail = asyncHandler(async (req, res) => {
   const namePart1 = nameArray.length > 0 ? nameArray[0] : "";
   const namePart2 = nameArray.length > 1 ? nameArray.slice(1).join(" ") : "";
 
-  res.status(200).json({
-    status: "success",
-    message: "Hisse detayı başarıyla getirildi",
+  const successResponse = new customSuccess(successCodes.STOCKS_SUCCESS, {
     fullName: stockInfo.name,
     name: namePart1,
     description: namePart2,
     lastPrice: parseFloat(stockInfo.lastPrice.replace(",", ".")),
     data: formattedData,
   });
+
+  res.json(successResponse);
+
+
 });
 
 const searchStock = asyncHandler(async (req, res) => {
@@ -72,7 +74,6 @@ const searchStock = asyncHandler(async (req, res) => {
         data: JSON.parse(cachedStocks),
       });
       return res.json(successResponse);
-      
     } else {
       const data = await Stock.find(query).skip(skip).limit(limit);
       // Response formatını güncelle
@@ -96,11 +97,7 @@ const searchStock = asyncHandler(async (req, res) => {
         "EX",
         24 * 60 * 60
       );
-      // return res.status(200).json({
-      //   status: "success",
-      //   message: "Hisseler başarıyla getirildi",
-      //   data: formattedData,
-      // });
+
       const successResponse = new customSuccess(successCodes.STOCKS_SUCCESS, {
         data: formattedData,
       });
@@ -130,11 +127,11 @@ const searchStock = asyncHandler(async (req, res) => {
     };
   });
 
-  res.status(200).json({
-    status: "success",
-    message: "Hisseler başarıyla getirildi",
+  const successResponse = new customSuccess(successCodes.STOCKS_SUCCESS, {
     data: formattedData,
   });
+  return res.json(successResponse);
+
 });
 
 module.exports = { getStockDetail, searchStock };

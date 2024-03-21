@@ -8,5 +8,19 @@
   "FUND_DETAIL_SUCCESS":"Fund detail fetched successfully",
   "FUND_SEARCH_SUCCESS":"Fund search fetched successfully",
   "GOLD_DETAIL_SUCCESS":"Gold detail fetched successfully",
-  "GOLD_SEARCH_SUCCESS":"Gold search fetched successfully"
+  "GOLD_SEARCH_SUCCESS":"Gold search fetched successfully",
+  "PORTFOLIO_LIST_SUCCESS":"Portfolio list fetched successfully",
+  "PORTFOLIO_UPDATED_SUCCESS":"Portfolio updated successfully",
+  "PORTFOLIO_DELETED_SUCCESS":"Portfolio deleted successfully",
+  "PORTFOLIO_DETAILS_SUCCESS":"Portfolio details fetched successfully",
+  "PORTFOLIO_ASSETS_SUCCESS":"Portfolio assets fetched successfully",
+  "PORTFOLIO_CREATED_SUCCESS":"Portfolio created successfully",
+  "ASSET_ADDED_SUCCESS":"Asset added successfully",
+  "ASSET_SELL_SUCCESS":"Asset sold successfully",
+  "ASSET_DETAIL_SUCCESS":"Asset detail fetched successfully",
+  "PORTFOLIO_ASSETS_EMPTY_SUCCESS":"There is no asset of this type in the portfolio.",
+  "ADD_MONET_TO_BUDGET_SUCCESS":"Money added to budget successfully",
+  "DECREASE_MONET_FROM_BUDGET_SUCCESS":"Money decreased from budget successfully",
+  "BUDGET_DETAILS_SUCCESS":"Budget data fetched successfully",
+  "USER_CREATED":"User created successfully"
 }
