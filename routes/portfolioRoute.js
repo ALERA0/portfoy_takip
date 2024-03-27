@@ -28,7 +28,7 @@ router.route("/createPortfolio").post(portfolioController.createPortfolio);
 
 router.route("/addAsset/:portfolioId").post(portfolioController.addAsset);
 
-router.route("/sellAsset/:portfolioId/:assetId").delete(portfolioController.sellAsset);
+router.route("/sellAsset/:portfolioId/:assetId").post(portfolioController.sellAsset);
 
 router.route("/getAssetDetails").post(portfolioController.getAssetDetails);
 

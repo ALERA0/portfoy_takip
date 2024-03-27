@@ -455,7 +455,7 @@ const sellAsset = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.ASSET_NOT_FOUND);
   }
 
-  if (quantity > assetToRemove.quantity) {
+  if (quantity > assetToRemove.quantity && quantity === 0) {
     throw new customError(errorCodes.INSUFFICIENT_ASSET_QUANTITY);
   }
 
@@ -464,6 +464,7 @@ const sellAsset = asyncHandler(async (req, res) => {
 
   // Bütçeyi güncelle
   budget.totalValue += income;
+
   budget.totalProfitValue +=
     (sellingPrice - assetToRemove.purchasePrice) * quantity;
 
@@ -791,16 +792,22 @@ const getBudgetDetails = asyncHandler(async (req, res) => {
   if (!budget) {
     throw new customError(errorCodes.BUDGET_NOT_FOUND);
   }
+
+  // Round totalValue and totalProfitValue to two decimal places
+  const roundedBudget = {
+    ...budget.toObject(),
+    totalValue: budget.totalValue.toFixed(2),
+    totalProfitValue: budget.totalProfitValue.toFixed(2),
+  };
+
   const successResponse = new customSuccess(
     successCodes.BUDGET_DETAILS_SUCCESS,
     {
-      budget,
+      budget: roundedBudget,
     }
   );
 
   res.json(successResponse);
-
-
 });
 
 module.exports = {
