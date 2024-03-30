@@ -37,6 +37,7 @@ const getCurrencyDetail = asyncHandler(async (req, res) => {
       name: currencyName.name,
       lastPrice: parseFloat(currencyName.lastPrice.replace(",", ".")),
       description: currencyName.desc,
+      fullName: currencyName.desc,
       data: formattedData,
     }
   );
