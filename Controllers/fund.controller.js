@@ -36,7 +36,8 @@ const getFundDetail = asyncHandler(async (req, res) => {
   // Name ve Desc alanlarını ayarlayın
 
   const successResponse = new customSuccess(successCodes.FUND_DETAIL_SUCCESS, {
-    desc: fundInfo.desc,
+    description: fundInfo.desc,
+    fullName: fundInfo.desc,
     name: fundInfo.name,
     lastPrice: fundInfo.lastPrice,
     changePercent: fundInfo.changePercent,

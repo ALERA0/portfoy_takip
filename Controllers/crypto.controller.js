@@ -38,6 +38,7 @@ const getCryptoDetail = asyncHandler(async (req, res) => {
       name: cryptoName.name,
       lastPrice: cryptoName.lastPrice,
       description: cryptoName.desc,
+      fullName: cryptoName.desc,
       data: formattedData,
     }
   );
