@@ -354,7 +354,7 @@ const addAsset = asyncHandler(async (req, res) => {
   }
 
   // Validate type against allowed values
-  if (!["Stock", "Gold", "Currency"].includes(type)) {
+  if (!["Stock", "Gold", "Currency","Crypto","Fund"].includes(type)) {
     throw new customError(errorCodes.INVALID_ASSET_TYPE);
   }
 
