@@ -59,30 +59,30 @@ const searchCurrency = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   if ((searchParam === undefined || searchParam === null) && page === 1) {
-    const cachedCurrency = await redisClient.get("currencyData");
-    if (cachedCurrency) {
-      // Redis'teki veriyi döndür
-      const successResponse = new customSuccess(
-        successCodes.CURRENCY_SEARCH_SUCCESS,
-        {
-          data: JSON.parse(cachedCurrency),
-        }
-      );
+    // const cachedCurrency = await redisClient.get("currencyData");
+    // if (cachedCurrency) {
+    //   // Redis'teki veriyi döndür
+    //   const successResponse = new customSuccess(
+    //     successCodes.CURRENCY_SEARCH_SUCCESS,
+    //     {
+    //       data: JSON.parse(cachedCurrency),
+    //     }
+    //   );
 
-      res.json(successResponse);
-    } else {
+    //   res.json(successResponse);
+    // } else {
       const data = await Currency.find(query).skip(skip).limit(limit);
       const formattedData = data.map((currency) => ({
         ...currency.toObject(),
         changePercent: currency.changePercent.replace("%", ""),
       }));
 
-      await redisClient.set(
-        "currencyData",
-        JSON.stringify(formattedData),
-        "EX",
-        24 * 60 * 60
-      );
+      // await redisClient.set(
+      //   "currencyData",
+      //   JSON.stringify(formattedData),
+      //   "EX",
+      //   24 * 60 * 60
+      // );
 
       const successResponse = new customSuccess(
         successCodes.CURRENCY_SEARCH_SUCCESS,
@@ -92,7 +92,7 @@ const searchCurrency = asyncHandler(async (req, res) => {
       );
 
       res.json(successResponse);
-    }
+    // }
   }
 
   // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele

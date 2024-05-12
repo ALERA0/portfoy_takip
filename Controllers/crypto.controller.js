@@ -60,30 +60,30 @@ const searchCrypto = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   if ((searchParam === undefined || searchParam === null) && page === 1) {
-    const cachedCrypto = await redisClient.get("cryptoData");
-    if (cachedCrypto) {
-      // Return the data from Redis
+    // const cachedCrypto = await redisClient.get("cryptoData");
+    // if (cachedCrypto) {
+    //   // Return the data from Redis
 
-      const successResponse = new customSuccess(
-        successCodes.CRYPTO_SEARCH_SUCCESS,
-        {
-          data: JSON.parse(cachedCrypto),
-        }
-      );
+    //   const successResponse = new customSuccess(
+    //     successCodes.CRYPTO_SEARCH_SUCCESS,
+    //     {
+    //       data: JSON.parse(cachedCrypto),
+    //     }
+    //   );
 
-      res.json(successResponse);
-    }
+    //   res.json(successResponse);
+    // }
 
     // Get the cryptos added today
     const data = await Crypto.find(query).skip(skip).limit(limit);
 
     // Save the data to Redis
-    await redisClient.set(
-      "cryptoData",
-      JSON.stringify(data),
-      "EX",
-      24 * 60 * 60
-    ); // 1 hour TTL
+    // await redisClient.set(
+    //   "cryptoData",
+    //   JSON.stringify(data),
+    //   "EX",
+    //   24 * 60 * 60
+    // ); // 1 hour TTL
 
     const successResponse = new customSuccess(
       successCodes.CRYPTO_SEARCH_SUCCESS,

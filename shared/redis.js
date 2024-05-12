@@ -13,11 +13,11 @@ const createInstance = () => {
 };
 
 const getRedisInstance = () => {
-  if (!redisInstance) {
-    redisInstance = createInstance();
-    redisInstance.on('connect', () => console.log("Redis Connected"));
-    redisInstance.on('error', (err) => console.error('Redis error', err));
-  }
+  // if (!redisInstance) {
+  //   redisInstance = createInstance();
+  //   // redisInstance.on('connect', () => console.log("Redis Connected"));
+  //   // redisInstance.on('error', (err) => console.error('Redis error', err));
+  // }
 
   return redisInstance;
 };

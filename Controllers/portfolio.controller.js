@@ -353,10 +353,14 @@ const addAsset = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.MISSING_FIELD);
   }
 
+  console.log(type, name, quantity, purchasePrice, purchaseDate );
+
   // Validate type against allowed values
-  if (!["Stock", "Gold", "Currency","Crypto","Fund"].includes(type)) {
+  if (!["Stock", "Gold", "Currency", "Crypto", "Fund"].includes(type)) {
     throw new customError(errorCodes.INVALID_ASSET_TYPE);
   }
+
+  
 
   const portfolio = await Portfolio.findById(portfolioId);
 
@@ -368,6 +372,14 @@ const addAsset = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
     portfolioId: portfolioId,
   });
+
+  if (type === "Crypto") {
+    const usdValue = await Currency.findOne({
+      name: new RegExp("USD", "i"),
+    }).sort({ addedDate: -1 });
+    const replacedValue = parseFloat(parseFloat(usdValue.lastPrice.replace(",", ".")).toFixed(2));
+    purchasePrice = purchasePrice * replacedValue;
+  }
 
   const totalPurchaseValue = parseFloat(quantity * purchasePrice);
   if (totalPurchaseValue > budget.totalValue) {

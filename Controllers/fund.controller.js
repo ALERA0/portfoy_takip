@@ -61,19 +61,19 @@ const searchFund = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   if ((searchParam === undefined || searchParam === null) && page === 1) {
-    const cachedFund = await redisClient.get("fundData");
-    if (cachedFund) {
-      // Redis'teki veriyi döndür
+    // const cachedFund = await redisClient.get("fundData");
+    // if (cachedFund) {
+    //   // Redis'teki veriyi döndür
 
-      const successResponse = new customSuccess(
-        successCodes.FUND_SEARCH_SUCCESS,
-        {
-          data: JSON.parse(cachedFund),
-        }
-      );
+    //   const successResponse = new customSuccess(
+    //     successCodes.FUND_SEARCH_SUCCESS,
+    //     {
+    //       data: JSON.parse(cachedFund),
+    //     }
+    //   );
 
-      res.json(successResponse);
-    } else {
+    //   res.json(successResponse);
+    // } else {
       const data = await Fund.find(query).skip(skip).limit(limit);
       const formattedData = data.map((fund) => ({
         ...fund._doc,
@@ -82,12 +82,12 @@ const searchFund = asyncHandler(async (req, res) => {
         ),
       }));
 
-      await redisClient.set(
-        "fundData",
-        JSON.stringify(formattedData),
-        "EX",
-        24 * 60 * 60
-      );
+      // await redisClient.set(
+      //   "fundData",
+      //   JSON.stringify(formattedData),
+      //   "EX",
+      //   24 * 60 * 60
+      // );
 
       const successResponse = new customSuccess(
         successCodes.FUND_SEARCH_SUCCESS,
@@ -97,7 +97,7 @@ const searchFund = asyncHandler(async (req, res) => {
       );
 
       res.json(successResponse);
-    }
+    // }
   }
 
   // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele

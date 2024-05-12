@@ -57,30 +57,30 @@ const searchGold = asyncHandler(async (req, res) => {
     (searchParam === undefined || searchParam === null || searchParam === "") &&
     page === 1
   ) {
-    const cachedGold = await redisClient.get("goldData");
-    if (cachedGold) {
-      // Redis'teki veriyi döndür
+    // const cachedGold = await redisClient.get("goldData");
+    // if (cachedGold) {
+    //   // Redis'teki veriyi döndür
 
-      const successResponse = new customSuccess(
-        successCodes.GOLD_SEARCH_SUCCESS,
-        {
-          data: JSON.parse(cachedGold),
-        }
-      );
+    //   const successResponse = new customSuccess(
+    //     successCodes.GOLD_SEARCH_SUCCESS,
+    //     {
+    //       data: JSON.parse(cachedGold),
+    //     }
+    //   );
 
-      res.json(successResponse);
-    } else {
+    //   res.json(successResponse);
+    // } else {
       const data = await Gold.find(query).skip(skip).limit(limit);
       const formattedData = data.map((currency) => ({
         ...currency.toObject(),
         changePercent: currency.changePercent.replace("%", ""),
       }));
-      await redisClient.set(
-        "goldData",
-        JSON.stringify(formattedData),
-        "EX",
-        24 * 60 * 60
-      );
+      // await redisClient.set(
+      //   "goldData",
+      //   JSON.stringify(formattedData),
+      //   "EX",
+      //   24 * 60 * 60
+      // );
 
       const successResponse = new customSuccess(
         successCodes.GOLD_SEARCH_SUCCESS,
@@ -90,7 +90,7 @@ const searchGold = asyncHandler(async (req, res) => {
       );
 
       res.json(successResponse);
-    }
+    // }
   }
 
   if (searchParam && searchParam.trim() !== "") {

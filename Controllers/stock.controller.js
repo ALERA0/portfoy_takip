@@ -67,14 +67,14 @@ const searchStock = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   if ((searchParam === undefined || searchParam === null) && page === 1) {
-    const cachedStocks = await redisClient.get("stockData");
-    if (cachedStocks) {
-      // Redis'teki veriyi döndür
-      const successResponse = new customSuccess(successCodes.STOCKS_SUCCESS, {
-        data: JSON.parse(cachedStocks),
-      });
-      return res.json(successResponse);
-    } else {
+    // // const cachedStocks = await redisClient.get("stockData");
+    // if (cachedStocks) {
+    //   // Redis'teki veriyi döndür
+    //   const successResponse = new customSuccess(successCodes.STOCKS_SUCCESS, {
+    //     data: JSON.parse(cachedStocks),
+    //   });
+    //   return res.json(successResponse);
+    // } else {
       const data = await Stock.find(query).skip(skip).limit(limit);
       // Response formatını güncelle
       const formattedData = data.map((stock) => {
@@ -91,18 +91,18 @@ const searchStock = asyncHandler(async (req, res) => {
         };
       });
 
-      await redisClient.set(
-        "stockData",
-        JSON.stringify(formattedData),
-        "EX",
-        24 * 60 * 60
-      );
+      // await redisClient.set(
+      //   "stockData",
+      //   JSON.stringify(formattedData),
+      //   "EX",
+      //   24 * 60 * 60
+      // );
 
       const successResponse = new customSuccess(successCodes.STOCKS_SUCCESS, {
         data: formattedData,
       });
       return res.json(successResponse);
-    }
+    // }
   }
 
   // Eğer searchParam varsa ve boş değilse, adı belirtilen şekilde de filtrele
