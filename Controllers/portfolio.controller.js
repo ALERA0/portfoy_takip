@@ -111,18 +111,27 @@ const getPortfolioDetails = asyncHandler(async (req, res) => {
   }
 
   // Her bir varlık için lastPrice'ı güncelle
+
+  // KRİPTO İÇİN VERİ TABANINA EKLERKEN BİR HAREKET YAPTIK VİRGÜL NOKTA İÇİN
   const updatedPortfolioDetails = await Promise.all(
     portfolio.portfolioDetails.map(async (asset) => {
+      let lastPrice;
       const latestData = await getLatestPrice(asset.type, asset.name);
       const purchasePrice = parseFloat(asset.purchasePrice).toFixed(2);
-      const lastPrice = parseFloat(
-        latestData.lastPrice.replace(",", ".")
-      ).toFixed(2);
+      if (asset.type === "Crypto") {
+        lastPrice = parseFloat(
+          latestData.lastPrice.replace("$", "").replace(",", ".")
+        ).toFixed(2);
+      } else {
+        lastPrice = parseFloat(latestData.lastPrice.replace(",", ".")).toFixed(
+          2
+        );
+      }
       const totalAssetValue = asset.quantity * lastPrice;
 
       const profitPercentage =
         ((lastPrice - asset.purchasePrice) / asset.purchasePrice) * 100;
-console.log(asset,"ASSSETT");
+      console.log(asset, "ASSSETT");
       const profitValue =
         totalAssetValue - asset.quantity * asset.purchasePrice;
       const totalPurchasePrice = asset.quantity * asset.purchasePrice;
@@ -354,13 +363,10 @@ const addAsset = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.MISSING_FIELD);
   }
 
-
   // Validate type against allowed values
   if (!["Stock", "Gold", "Currency", "Crypto", "Fund"].includes(type)) {
     throw new customError(errorCodes.INVALID_ASSET_TYPE);
   }
-
-  
 
   const portfolio = await Portfolio.findById(portfolioId);
 
@@ -373,12 +379,13 @@ const addAsset = asyncHandler(async (req, res) => {
     portfolioId: portfolioId,
   });
 
-
   if (type === "Crypto") {
     const usdValue = await Currency.findOne({
       name: new RegExp("USD", "i"),
     }).sort({ addedDate: -1 });
-    const replacedValue = parseFloat(parseFloat(usdValue.lastPrice.replace(",", ".")).toFixed(2));
+    const replacedValue = parseFloat(
+      parseFloat(usdValue.lastPrice.replace(",", ".")).toFixed(2)
+    );
     purchasePrice = purchasePrice * replacedValue;
   }
 
@@ -396,7 +403,7 @@ const addAsset = asyncHandler(async (req, res) => {
   );
 
   if (existingAsset) {
-    console.log(existingAsset.quantity, quantity,"QUUQUQUQUQUUQ");
+    console.log(existingAsset.quantity, quantity, "QUUQUQUQUQUUQ");
     const totalQuantity = existingAsset.quantity + quantity;
     const totalPurchaseValue =
       existingAsset.purchasePrice * existingAsset.quantity +
@@ -406,7 +413,15 @@ const addAsset = asyncHandler(async (req, res) => {
       ((newPurchasePrice - existingAsset.purchasePrice) /
         existingAsset.purchasePrice) *
       100;
-    const newTotalAssetValue = totalQuantity * existingAsset.lastPrice;
+    let newTotalAssetValue;
+    // if (type === "Crypto") {
+    //   console.log(existingAsset.lastPrice, "LAST PRICE");
+    //  const lastPrice = parseFloat(existingAsset.lastPrice.replace("$", "").replace(",", ""));
+    //   newTotalAssetValue =
+    //     totalQuantity * lastPrice;
+    // } else {
+    // }
+       newTotalAssetValue = totalQuantity * existingAsset.lastPrice;
 
     // Update the existing asset with the new values
     existingAsset.quantity = totalQuantity;
@@ -419,27 +434,40 @@ const addAsset = asyncHandler(async (req, res) => {
     const successResponse = new customSuccess(successCodes.ASSET_ADDED_SUCCESS);
 
     res.json(successResponse);
-  }
-
-  else{
+  } else {
     // Büyük harfe çevir
-  const upperCaseName = name.toUpperCase();
+    const upperCaseName = name.toUpperCase();
 
-  const newPortfolioDetail = new PortfolioDetail({
-    type,
-    name: upperCaseName,
-    quantity,
-    purchasePrice,
-    purchaseDate,
-  });
+    let lastPrice;
 
-  portfolio.portfolioDetails.push(newPortfolioDetail);
+    if(type === "Crypto") {
+      lastPrice = await getLatestPrice(type, name);
+      lastPrice = parseFloat(lastPrice.lastPrice.replace("$", "").replace(",", ""));
+    }else{
+      lastPrice = await getLatestPrice(type, name);
+      lastPrice = parseFloat(lastPrice.lastPrice.replace(",", ".")) ;
+    }
 
-  await portfolio.save();
+     
 
-  const successResponse = new customSuccess(successCodes.ASSET_ADDED_SUCCESS);
+    console.log(lastPrice, "LAST PRICEeeeeeeeeeeee");
 
-  res.json(successResponse);
+    const newPortfolioDetail = new PortfolioDetail({
+      type,
+      name: upperCaseName,
+      quantity,
+      purchasePrice,
+      purchaseDate,
+      lastPrice:lastPrice,
+    });
+
+    portfolio.portfolioDetails.push(newPortfolioDetail);
+
+    await portfolio.save();
+
+    const successResponse = new customSuccess(successCodes.ASSET_ADDED_SUCCESS);
+
+    res.json(successResponse);
   }
 });
 

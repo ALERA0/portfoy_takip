@@ -19,7 +19,7 @@ const scrapeCryptoData = async () => {
             $(".col.name").each((index, element) => {
                 const desc = $(element).find("h3 a").text().trim().split(' ')[0];
                 const name = $(element).find(".ticker").text().trim();
-                const lastPrice = $(element).next().text().trim();
+                const lastPrice = $(element).next().text().trim().replace(",","");
                 const changePercent = $(element).next().next().text().trim().replace('%', '');
 
               
