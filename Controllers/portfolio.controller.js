@@ -347,7 +347,7 @@ const createPortfolio = asyncHandler(async (req, res) => {
 });
 
 const addAsset = asyncHandler(async (req, res) => {
-  const { type, name, quantity, purchasePrice, purchaseDate } = req.body;
+  let { type, name, quantity, purchasePrice, purchaseDate } = req.body;
   const portfolioId = req.params.portfolioId;
 
   if (!type || !name || !quantity || !purchasePrice || !purchaseDate) {
