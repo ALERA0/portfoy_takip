@@ -122,12 +122,13 @@ const getPortfolioDetails = asyncHandler(async (req, res) => {
 
       const profitPercentage =
         ((lastPrice - asset.purchasePrice) / asset.purchasePrice) * 100;
-
+console.log(asset,"ASSSETT");
       const profitValue =
         totalAssetValue - asset.quantity * asset.purchasePrice;
       const totalPurchasePrice = asset.quantity * asset.purchasePrice;
       return {
         ...asset.toObject(),
+        fullName: asset.name,
         lastPrice,
         purchasePrice,
         profitPercentage: parseFloat(profitPercentage.toFixed(2)),
@@ -353,7 +354,6 @@ const addAsset = asyncHandler(async (req, res) => {
     throw new customError(errorCodes.MISSING_FIELD);
   }
 
-  console.log(type, name, quantity, purchasePrice, purchaseDate );
 
   // Validate type against allowed values
   if (!["Stock", "Gold", "Currency", "Crypto", "Fund"].includes(type)) {
@@ -396,6 +396,7 @@ const addAsset = asyncHandler(async (req, res) => {
   );
 
   if (existingAsset) {
+    console.log(existingAsset.quantity, quantity,"QUUQUQUQUQUUQ");
     const totalQuantity = existingAsset.quantity + quantity;
     const totalPurchaseValue =
       existingAsset.purchasePrice * existingAsset.quantity +
