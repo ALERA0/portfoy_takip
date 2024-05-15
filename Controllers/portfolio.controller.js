@@ -373,6 +373,7 @@ const addAsset = asyncHandler(async (req, res) => {
     portfolioId: portfolioId,
   });
 
+
   if (type === "Crypto") {
     const usdValue = await Currency.findOne({
       name: new RegExp("USD", "i"),
@@ -419,7 +420,8 @@ const addAsset = asyncHandler(async (req, res) => {
     res.json(successResponse);
   }
 
-  // Büyük harfe çevir
+  else{
+    // Büyük harfe çevir
   const upperCaseName = name.toUpperCase();
 
   const newPortfolioDetail = new PortfolioDetail({
@@ -437,6 +439,7 @@ const addAsset = asyncHandler(async (req, res) => {
   const successResponse = new customSuccess(successCodes.ASSET_ADDED_SUCCESS);
 
   res.json(successResponse);
+  }
 });
 
 const sellAsset = asyncHandler(async (req, res) => {
