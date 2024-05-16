@@ -6,6 +6,8 @@ const { default: mongoose } = require("mongoose");
 const Currency = require("../models/Currency");
 const Gold = require("../models/Gold");
 const Stock = require("../models/Stock");
+const Fund = require("../models/Fund");
+
 const randomColor = require("randomcolor");
 const Budget = require("../models/Budget");
 const PortfolioDetail = require("../models/PortfolioDetail");
@@ -13,6 +15,7 @@ const {
   customSuccess,
 } = require("../shared/handlers/success/customSuccess.js");
 const { successCodes } = require("../shared/handlers/success/successCodes.js");
+const Crypto = require("../models/Crypto.js");
 
 const allowedTypes = [
   "Stock",
@@ -570,6 +573,16 @@ const getAssetDetails = asyncHandler(async (req, res) => {
       break;
     case "Gold":
       historicalData = await Gold.find({ name: new RegExp(name, "i") })
+        .sort({ addedDate: -1 })
+        .limit(parseInt(numberOfDays));
+      break;
+      case "Crypto":
+      historicalData = await Crypto.find({ name: new RegExp(name, "i") })
+        .sort({ addedDate: -1 })
+        .limit(parseInt(numberOfDays));
+      break;
+      case "Fund":
+      historicalData = await Fund.find({ name: new RegExp(name, "i") })
         .sort({ addedDate: -1 })
         .limit(parseInt(numberOfDays));
       break;
