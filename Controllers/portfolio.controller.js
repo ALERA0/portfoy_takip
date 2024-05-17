@@ -140,7 +140,7 @@ const getPortfolioDetails = asyncHandler(async (req, res) => {
       const totalPurchasePrice = asset.quantity * asset.purchasePrice;
       return {
         ...asset.toObject(),
-        fullName: asset.name,
+        // fullName,
         lastPrice,
         purchasePrice,
         profitPercentage: parseFloat(profitPercentage.toFixed(2)),
@@ -442,18 +442,26 @@ const addAsset = asyncHandler(async (req, res) => {
     const upperCaseName = name.toUpperCase();
 
     let lastPrice;
+    let fullName;
 
     if(type === "Crypto") {
       lastPrice = await getLatestPrice(type, name);
+      console.log(lastPrice,"LAST PRICE");
+      fullName = lastPrice.desc;
       lastPrice = parseFloat(lastPrice.lastPrice.replace("$", "").replace(",", ""));
+    }else if(type === "Gold" || type=== "Stock"){
+      lastPrice = await getLatestPrice(type, name);
+      console.log(lastPrice,"LAST PRICE");
+      fullName = lastPrice.name;
+      lastPrice = parseFloat(lastPrice.lastPrice.replace(",", ".")) ;
     }else{
       lastPrice = await getLatestPrice(type, name);
+      fullName = lastPrice.desc;
       lastPrice = parseFloat(lastPrice.lastPrice.replace(",", ".")) ;
     }
 
      
-
-    console.log(lastPrice, "LAST PRICEeeeeeeeeeeee");
+console.log(fullName,"FULL NAME");
 
     const newPortfolioDetail = new PortfolioDetail({
       type,
@@ -462,6 +470,7 @@ const addAsset = asyncHandler(async (req, res) => {
       purchasePrice,
       purchaseDate,
       lastPrice:lastPrice,
+      fullName:fullName,
     });
 
     portfolio.portfolioDetails.push(newPortfolioDetail);
@@ -609,18 +618,17 @@ const getAssetDetails = asyncHandler(async (req, res) => {
   let namefirst;
   let description;
 
+  console.log(asset,"ASSEEEEET");
   if (type === "Stock") {
     formattedNames = asset.name.split(" ");
     namefirst = formattedNames.length > 0 ? formattedNames[0] : "";
     description =
       formattedNames.length > 1 ? formattedNames.slice(1).join(" ") : "";
-  } else if (type === "Currency") {
-    const currency = await Currency.findOne({ name: asset.name });
-    namefirst = currency.name;
-    description = currency.desc;
+  } else if (type === "Currency" || type === "Crypto" || type === "Fund") {
+    namefirst = asset.name;
+    description = asset.fullName;
   } else if (type === "Gold") {
-    const gold = await Gold.findOne({ name: asset.name });
-    namefirst = gold.name;
+    namefirst = asset.name;
   }
 
   const successResponse = new customSuccess(successCodes.ASSET_DETAIL_SUCCESS, {

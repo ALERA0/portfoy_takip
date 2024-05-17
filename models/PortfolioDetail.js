@@ -12,6 +12,10 @@ const portfolioDetailSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  fullName:{
+    type: String,
+    required: false,
+  },
   quantity: {
     type: Number,
     required: true,
