@@ -601,14 +601,20 @@ const getAssetDetails = asyncHandler(async (req, res) => {
   }
 
   // Verileri istenen formata çevir
-  const formattedHistoricalData = historicalData.map((item, index, array) => ({
-    value: parseFloat(item.lastPrice.replace(",", ".")),
-    date: item.addedDate.toISOString().split("T")[0],
-    label:
-      index === 0 || index === array.length - 1
-        ? item.addedDate.toISOString().split("T")[0]
-        : null,
-  }));
+  const formattedHistoricalData = historicalData.map((item, index, array) => {
+    const value = type === "Crypto"
+      ? parseFloat(item.lastPrice.replace("$", "").replace(",", ""))
+      : parseFloat(item.lastPrice.replace(",", "."));
+    
+    return {
+      value: value,
+      date: item.addedDate.toISOString().split("T")[0],
+      label:
+        index === 0 || index === array.length - 1
+          ? item.addedDate.toISOString().split("T")[0]
+          : null,
+    };
+  });
 
   const formattedPurchaseDate = asset.purchaseDate
     ? asset.purchaseDate.toISOString().split("T")[0]
